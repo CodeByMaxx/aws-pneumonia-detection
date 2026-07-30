@@ -1,0 +1,87 @@
+from pathlib import Path
+import tensorflow as tf
+from tensorflow.keras import layers, models
+from tensorflow.keras.applications import EfficientNetB0
+
+
+IMG_SIZE = (224, 224)
+BATCH_SIZE = 32
+EPOCHS = 10
+
+
+BASE_DIR = Path(__file__).resolve().parent.parent
+
+TRAIN_PATH = BASE_DIR / "data" / "raw" / "chest_xray" / "train"
+VAL_PATH = BASE_DIR / "data" / "raw" / "chest_xray" / "val"
+
+MODEL_PATH = BASE_DIR / "models" / "pneumonia_model.keras"
+
+
+def load_dataset(path):
+
+    return tf.keras.utils.image_dataset_from_directory(
+        path,
+        image_size=IMG_SIZE,
+        batch_size=BATCH_SIZE,
+        label_mode="binary"
+    )
+
+
+def build_model():
+
+    base_model = EfficientNetB0(
+        include_top=False,
+        weights="imagenet",
+        input_shape=(224,224,3)
+    )
+
+    base_model.trainable = False
+
+    model = models.Sequential([
+        base_model,
+        layers.GlobalAveragePooling2D(),
+        layers.Dropout(0.3),
+        layers.Dense(1, activation="sigmoid")
+    ])
+
+    return model
+
+
+if __name__ == "__main__":
+
+    print("Loading dataset...")
+
+    train_ds = load_dataset(TRAIN_PATH)
+    val_ds = load_dataset(VAL_PATH)
+
+
+    model = build_model()
+
+    model.compile(
+        optimizer="adam",
+        loss="binary_crossentropy",
+        metrics=["accuracy"]
+    )
+
+
+    model.summary()
+
+
+    print("Starting training...")
+
+    history = model.fit(
+        train_ds,
+        validation_data=val_ds,
+        epochs=EPOCHS
+    )
+
+
+    MODEL_PATH.parent.mkdir(
+        exist_ok=True
+    )
+
+    model.save(MODEL_PATH)
+
+    print(
+        f"Model saved to {MODEL_PATH}"
+    )
