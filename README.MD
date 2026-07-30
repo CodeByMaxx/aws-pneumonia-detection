@@ -1,328 +1,6 @@
-## AWS Setup for Pneumonia Detection Model
-
-This project uses AWS services to store and manage the trained pneumonia detection model.
-
-The AWS workflow:
-
-```text
-Training on GPU
-        |
-        ↓
-pneumonia_model.keras
-        |
-        ↓
-Amazon S3 Bucket
-        |
-        ↓
-Download Model
-        |
-        ↓
-Inference / Prediction
-```
-
----
-
-# 1. Create an AWS Account
-
-Create an AWS account if you do not already have one:
-
-https://aws.amazon.com/
-
-After login, open the AWS Management Console.
-
----
-
-# 2. Create an IAM User
-
-For security reasons, do not use the AWS root account for this project.
-
-Create a dedicated IAM user:
-
-1. Open:
-
-```text
-AWS Console → IAM → Users → Create user
-```
-
-2. Create a user, for example:
-
-```text
-pneumonia-detection-user
-```
-
-3. Enable access for programmatic usage.
-
-The user needs access keys for AWS CLI authentication.
-
----
-
-# 3. Create IAM Permissions
-
-The user requires access to Amazon S3.
-
-Create a policy with the following permissions:
-
-```json
-{
-    "Version": "2012-10-17",
-    "Statement": [
-        {
-            "Effect": "Allow",
-            "Action": [
-                "s3:GetObject",
-                "s3:PutObject",
-                "s3:ListBucket"
-            ],
-            "Resource": "*"
-        }
-    ]
-}
-```
-
-Attach this policy to the IAM user.
-
-For production environments, restrict the permissions to the specific S3 bucket.
-
----
-
-# 4. Create AWS Access Keys
-
-Open:
-
-```text
-AWS Console
-→ IAM
-→ Users
-→ pneumonia-detection-user
-→ Security credentials
-```
-
-Create a new access key.
-
-You will receive:
-
-```text
-AWS Access Key ID
-AWS Secret Access Key
-```
-
-Example:
-
-```text
-AWS_ACCESS_KEY_ID
-AWS_SECRET_ACCESS_KEY
-```
-
-Store these values securely.
-
-Do not upload them to GitHub.
-
----
-
-# 5. Install AWS CLI
-
-Install AWS CLI:
-
-https://aws.amazon.com/cli/
-
-Check installation:
-
-```bash
-aws --version
-```
-
-Example:
-
-```text
-aws-cli/2.x.x
-```
-
----
-
-# 6. Configure AWS CLI
-
-Configure your AWS credentials:
-
-```bash
-aws configure
-```
-
-Enter the credentials from your IAM user:
-
-```text
-AWS Access Key ID:
-YOUR_ACCESS_KEY
-
-AWS Secret Access Key:
-YOUR_SECRET_KEY
-
-Default region name:
-eu-central-1
-
-Default output format:
-json
-```
-
----
-
-# 7. Test AWS Connection
-
-Verify that AWS CLI can authenticate:
-
-```bash
-aws sts get-caller-identity
-```
-
-Example response:
-
-```json
-{
-    "UserId": "xxxxxxxx",
-    "Account": "xxxxxxxx",
-    "Arn": "arn:aws:iam::xxxxxxxx:user/pneumonia-detection-user"
-}
-```
-
-If the command returns your IAM user information, the AWS configuration is complete.
-
----
-
-# 8. Create an S3 Bucket
-
-Create an S3 bucket for storing the trained model.
-
-Open:
-
-```text
-AWS Console
-→ S3
-→ Create bucket
-```
-
-Example bucket name:
-
-```text
-codebymaxx-pneumonia-models
-```
-
-Bucket names must be globally unique.
-
-Recommended structure:
-
-```text
-s3://codebymaxx-pneumonia-models/
-
-└── models/
-    └── pneumonia_model.keras
-```
-
----
-
-# 9. Upload the Trained Model
-
-After successful training, the model is saved locally:
-
-```text
-models/
-└── pneumonia_model.keras
-```
-
-Upload the model:
-
-```bash
-python3 training/upload_model.py
-```
-
-The script uploads:
-
-```text
-models/pneumonia_model.keras
-```
-
-to:
-
-```text
-s3://YOUR_BUCKET_NAME/models/pneumonia_model.keras
-```
-
----
-
-# 10. Download Model from S3
-
-For inference, the model can be downloaded from S3:
-
-```bash
-python3 inference/download_model.py
-```
-
-The model will be stored locally:
-
-```text
-models/
-└── pneumonia_model.keras
-```
-
----
-
-# 11. AWS Security
-
-Never commit sensitive AWS files.
-
-Add these entries to `.gitignore`:
-
-```text
-.aws/
-.env
-```
-
-Never upload:
-
-* AWS Access Keys
-* AWS Secret Keys
-* AWS credentials
-* private configuration files
-
-For production environments use:
-
-* IAM Roles
-* EC2 Instance Profiles
-* AWS Secrets Manager
-
----
-
-# 12. Optional: GPU Training on AWS EC2
-
-The model can also be trained on an AWS GPU instance.
-
-Recommended instance types:
-
-```text
-g4dn.xlarge
-g5.xlarge
-```
-
-Workflow:
-
-```text
-EC2 GPU Instance
-
-        ↓
-
-Install NVIDIA Drivers
-        ↓
-Install CUDA + TensorFlow
-        ↓
-Download Dataset
-        ↓
-Train Model
-        ↓
-Upload Model to S3
-```
-
-This allows scalable GPU training without using local hardware.
 # AWS Pneumonia Detection Model
 
-Deep Learning project for detecting pneumonia from chest X-Ray images using TensorFlow and EfficientNetB0.
+Deep Learning project for detecting pneumonia from chest X-Ray images using **TensorFlow** and **EfficientNetB0**.
 
 The project supports:
 
@@ -365,39 +43,45 @@ aws-pneumonia-detection/
 
 ---
 
-# Local Setup and Training
-
-The project can be trained locally using an NVIDIA GPU or moved to AWS GPU infrastructure.
-
-Workflow:
+# Project Workflow
 
 ```text
 Dataset
 
-   ↓
+    ↓
 
 Preprocessing
 
-   ↓
+    ↓
 
 TensorFlow Training
 
-   ↓
+    ↓
 
 EfficientNetB0 Model
 
-   ↓
+    ↓
 
 pneumonia_model.keras
 
-   ↓
+    ↓
 
-AWS S3 Storage
+Amazon S3 Storage
+
+    ↓
+
+Inference / Prediction
 ```
 
 ---
 
-# 1. Clone Repository
+# Local Setup and Training
+
+The model can be trained locally using an NVIDIA GPU or moved to AWS GPU infrastructure.
+
+---
+
+## 1. Clone Repository
 
 ```bash
 git clone https://github.com/CodeByMaxx/aws-pneumonia-detection.git
@@ -407,15 +91,15 @@ cd aws-pneumonia-detection
 
 ---
 
-# 2. Create Python Environment
+## 2. Create Python Environment
 
-Create a virtual environment:
+Create virtual environment:
 
 ```bash
 python3 -m venv .venv
 ```
 
-Activate environment:
+Activate:
 
 Linux:
 
@@ -431,7 +115,7 @@ Windows:
 
 ---
 
-# 3. Install Dependencies
+## 3. Install Dependencies
 
 Install required packages:
 
@@ -450,11 +134,11 @@ Main dependencies:
 
 ---
 
-# 4. Dataset Preparation
+# Dataset Preparation
 
 This project uses the Kaggle Chest X-Ray Pneumonia dataset.
 
-Download dataset:
+Download:
 
 ```bash
 kaggle datasets download \
@@ -489,11 +173,9 @@ data/
 
 ---
 
-# 5. Check GPU Availability
+# GPU Verification
 
-The project supports NVIDIA GPUs.
-
-Check TensorFlow GPU detection:
+Check TensorFlow GPU support:
 
 ```bash
 python3 -c "import tensorflow as tf; print(tf.config.list_physical_devices('GPU'))"
@@ -522,7 +204,9 @@ TensorFlow:
 
 ---
 
-# 6. Dataset Preprocessing
+# Training Pipeline
+
+## Preprocessing
 
 Run:
 
@@ -538,9 +222,9 @@ Found 5216 files belonging to 2 classes.
 
 ---
 
-# 7. Start Training
+## Start Training
 
-Start model training:
+Run:
 
 ```bash
 python3 training/start_training.py
@@ -590,13 +274,13 @@ The evaluation provides:
 * F1 Score
 * Confusion Matrix
 
-For medical classification, Recall is especially important because false negatives should be minimized.
+For medical classification, **Recall** is especially important because false negatives should be minimized.
 
 ---
 
 # Local Inference
 
-Run prediction on a single X-Ray image:
+Run prediction:
 
 ```bash
 python3 inference/predict.py \
@@ -616,49 +300,53 @@ Confidence:
 
 ---
 
-# AWS Setup for Pneumonia Detection Model
+# AWS Model Storage Setup
 
-The project uses AWS S3 for storing trained models.
+The project uses **Amazon S3** to store trained models.
 
 AWS workflow:
 
 ```text
-Local Training
+Training
 
-        ↓
+    ↓
 
 pneumonia_model.keras
 
-        ↓
+    ↓
 
 Amazon S3 Bucket
 
-        ↓
+    ↓
 
 Download Model
 
-        ↓
+    ↓
 
 Inference
 ```
 
 ---
 
-# 1. Create AWS Account
+# AWS Account Setup
+
+## 1. Create AWS Account
 
 Create an AWS account:
 
 https://aws.amazon.com/
 
-Login to the AWS Management Console.
+Open the AWS Management Console after login.
 
 ---
 
-# 2. Create IAM User
+# IAM Configuration
+
+## 2. Create IAM User
 
 Do not use the AWS root account.
 
-Create a dedicated user:
+Create a dedicated IAM user:
 
 ```text
 AWS Console
@@ -676,13 +364,15 @@ Example:
 pneumonia-detection-user
 ```
 
-Create an access key for programmatic access.
+Enable programmatic access.
+
+The user requires access keys for AWS CLI authentication.
 
 ---
 
-# 3. IAM Permissions
+## 3. Configure IAM Permissions
 
-The user requires S3 access.
+The user requires S3 permissions.
 
 Example policy:
 
@@ -703,16 +393,20 @@ Example policy:
 }
 ```
 
-For production environments, restrict access to the required bucket only.
+Attach the policy to the IAM user.
+
+For production environments, restrict permissions to the required S3 bucket only.
 
 ---
 
-# 4. Create AWS Access Keys
+## 4. Create AWS Access Keys
 
-Go to:
+Open:
 
 ```text
-IAM
+AWS Console
+
+→ IAM
 
 → Users
 
@@ -721,11 +415,7 @@ IAM
 → Security credentials
 ```
 
-Create:
-
-```text
-Access Key
-```
+Create a new access key.
 
 You receive:
 
@@ -735,27 +425,43 @@ AWS Access Key ID
 AWS Secret Access Key
 ```
 
-Keep these credentials private.
+Example environment variables:
 
-Never upload them to GitHub.
+```text
+AWS_ACCESS_KEY_ID
+
+AWS_SECRET_ACCESS_KEY
+```
+
+Store them securely.
+
+Never upload credentials to GitHub.
 
 ---
 
-# 5. Install AWS CLI
+# AWS CLI Setup
+
+## 5. Install AWS CLI
 
 Install:
 
 https://aws.amazon.com/cli/
 
-Check:
+Verify:
 
 ```bash
 aws --version
 ```
 
+Example:
+
+```text
+aws-cli/2.x.x
+```
+
 ---
 
-# 6. Configure AWS CLI
+## 6. Configure AWS CLI
 
 Run:
 
@@ -781,21 +487,33 @@ json
 
 ---
 
-# 7. Test AWS Connection
+## 7. Test AWS Connection
 
-Run:
+Verify authentication:
 
 ```bash
 aws sts get-caller-identity
 ```
 
-Successful output shows your IAM user information.
+Example:
+
+```json
+{
+    "UserId": "xxxxxxxx",
+    "Account": "xxxxxxxx",
+    "Arn": "arn:aws:iam::xxxxxxxx:user/pneumonia-detection-user"
+}
+```
+
+If the IAM user information is returned, the AWS configuration is complete.
 
 ---
 
-# 8. Create S3 Bucket
+# Amazon S3 Model Storage
 
-Create:
+## 8. Create S3 Bucket
+
+Create a bucket:
 
 ```text
 AWS Console
@@ -811,6 +529,8 @@ Example:
 codebymaxx-pneumonia-models
 ```
 
+Bucket names must be globally unique.
+
 Recommended structure:
 
 ```text
@@ -823,15 +543,15 @@ s3://codebymaxx-pneumonia-models/
 
 ---
 
-# Upload Model to S3
+# Upload Model
 
-After training:
+After successful training:
 
 ```bash
 python3 training/upload_model.py
 ```
 
-The model will be uploaded:
+Uploads:
 
 ```text
 models/pneumonia_model.keras
@@ -840,24 +560,20 @@ models/pneumonia_model.keras
 to:
 
 ```text
-S3 Bucket
-
-└── models/
-
-    └── pneumonia_model.keras
+s3://YOUR_BUCKET_NAME/models/pneumonia_model.keras
 ```
 
 ---
 
-# Download Model from S3
+# Download Model
 
-Download the model:
+For inference:
 
 ```bash
 python3 inference/download_model.py
 ```
 
-The file is stored locally:
+The model is stored locally:
 
 ```text
 models/
@@ -869,7 +585,7 @@ models/
 
 # AWS Security
 
-Never commit:
+Never commit sensitive files:
 
 ```text
 .aws/
@@ -881,9 +597,10 @@ Never upload:
 
 * AWS Access Keys
 * AWS Secret Keys
-* Private credentials
+* AWS credentials
+* Private configuration files
 
-For production use:
+For production environments use:
 
 * IAM Roles
 * EC2 Instance Profiles
@@ -893,9 +610,9 @@ For production use:
 
 # Optional AWS EC2 GPU Training
 
-For larger training workloads the project can run on AWS GPU instances.
+For larger workloads, training can run on AWS GPU instances.
 
-Recommended:
+Recommended instances:
 
 ```text
 g4dn.xlarge
@@ -931,10 +648,14 @@ Upload Model to S3
 
 ---
 
-# Complete Workflow
+# Complete End-to-End Workflow
 
 ```text
 Developer Machine
+
+        ↓
+
+Prepare Dataset
 
         ↓
 
