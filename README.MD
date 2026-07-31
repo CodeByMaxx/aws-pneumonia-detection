@@ -1,14 +1,56 @@
 # AWS Pneumonia Detection Model
 
-Deep Learning project for detecting pneumonia from chest X-Ray images using **TensorFlow** and **EfficientNetB0**.
+End-to-end Deep Learning project for detecting pneumonia from chest X-Ray images using **TensorFlow**, **EfficientNetB0**, and **AWS infrastructure**.
 
-The project supports:
+The project demonstrates a complete machine learning workflow:
 
-* Local GPU training
-* Model evaluation
-* Local inference
-* AWS S3 model storage
-* Optional AWS EC2 GPU training
+- Data preparation
+- GPU accelerated model training
+- Model evaluation
+- Local inference
+- Configuration-driven training
+- AWS S3 model storage
+- Optional AWS EC2 GPU training
+- Planned FastAPI inference service
+- Planned Docker deployment
+
+---
+
+# Architecture Overview
+
+```text
+                Chest X-Ray Dataset
+
+                        |
+                        ↓
+
+              Data Preprocessing
+
+                        |
+                        ↓
+
+          TensorFlow EfficientNetB0
+
+                        |
+                        ↓
+
+              Model Evaluation
+
+                        |
+                        ↓
+
+              pneumonia_model.keras
+
+                        |
+                        ↓
+
+                 Amazon S3
+
+                        |
+                        ↓
+
+              Inference Service
+```
 
 ---
 
@@ -17,69 +59,67 @@ The project supports:
 ```text
 aws-pneumonia-detection/
 
+├── config/
+│   ├── config_local.json
+│   └── config_aws.json
+│
 ├── data/
 │   └── raw/
 │       └── chest_xray/
 │           ├── train/
 │           ├── test/
 │           └── val/
-
+│
 ├── models/
 │   └── pneumonia_model.keras
-
+│
+├── utils/
+│   └── config_loader.py
+│
 ├── training/
 │   ├── preprocess.py
 │   ├── start_training.py
 │   ├── evaluate.py
 │   └── upload_model.py
-
+│
 ├── inference/
 │   ├── predict.py
 │   └── download_model.py
-
+│
 ├── requirements.txt
 └── README.md
 ```
 
 ---
 
-# Project Workflow
+# Technology Stack
 
-```text
-Dataset
+## Machine Learning
 
-    ↓
+- Python 3.12
+- TensorFlow 2.21
+- EfficientNetB0
+- Transfer Learning
+- Binary Image Classification
 
-Preprocessing
+## Infrastructure
 
-    ↓
+- AWS S3
+- AWS EC2 GPU Instances
+- AWS CLI
+- boto3
 
-TensorFlow Training
+## Development
 
-    ↓
-
-EfficientNetB0 Model
-
-    ↓
-
-pneumonia_model.keras
-
-    ↓
-
-Amazon S3 Storage
-
-    ↓
-
-Inference / Prediction
-```
+- Virtual Environment
+- JSON Configuration
+- Git
+- Docker (planned)
+- FastAPI (planned)
 
 ---
 
-# Local Setup and Training
-
-The model can be trained locally using an NVIDIA GPU or moved to AWS GPU infrastructure.
-
----
+# Local Setup
 
 ## 1. Clone Repository
 
@@ -91,7 +131,7 @@ cd aws-pneumonia-detection
 
 ---
 
-## 2. Create Python Environment
+# 2. Create Python Environment
 
 Create virtual environment:
 
@@ -115,9 +155,7 @@ Windows:
 
 ---
 
-## 3. Install Dependencies
-
-Install required packages:
+# 3. Install Dependencies
 
 ```bash
 pip install -r requirements.txt
@@ -125,12 +163,42 @@ pip install -r requirements.txt
 
 Main dependencies:
 
-* TensorFlow
-* NumPy
-* Pandas
-* Scikit-Learn
-* OpenCV
-* boto3
+- TensorFlow
+- NumPy
+- Pandas
+- Scikit-Learn
+- OpenCV
+- boto3
+
+---
+
+# Configuration
+
+Training parameters are stored in JSON files.
+
+Example:
+
+```json
+{
+    "image_size": [224,224],
+    "batch_size": 32,
+    "epochs": 10,
+    "learning_rate": 0.0001,
+    "model_path": "models/pneumonia_model.keras"
+}
+```
+
+This allows different environments:
+
+```text
+config/
+
+├── config_local.json
+
+└── config_aws.json
+```
+
+without changing Python code.
 
 ---
 
@@ -173,22 +241,24 @@ data/
 
 ---
 
-# GPU Verification
+# GPU Environment
 
-Check TensorFlow GPU support:
+The project supports NVIDIA GPU acceleration.
+
+Test TensorFlow GPU detection:
 
 ```bash
-python3 -c "import tensorflow as tf; print(tf.config.list_physical_devices('GPU'))"
+python -c "import tensorflow as tf; print(tf.config.list_physical_devices('GPU'))"
 ```
 
 Example:
 
 ```text
 [
-PhysicalDevice(
-name='/physical_device:GPU:0',
-device_type='GPU'
-)
+ PhysicalDevice(
+ name='/physical_device:GPU:0',
+ device_type='GPU'
+ )
 ]
 ```
 
@@ -199,7 +269,13 @@ GPU:
 NVIDIA GeForce GTX 1660 Ti
 
 TensorFlow:
-2.16.1
+2.21.0
+
+CUDA:
+12.5
+
+cuDNN:
+9
 ```
 
 ---
@@ -211,10 +287,10 @@ TensorFlow:
 Run:
 
 ```bash
-python3 training/preprocess.py
+python -m training.preprocess
 ```
 
-Example output:
+Example:
 
 ```text
 Found 5216 files belonging to 2 classes.
@@ -224,31 +300,40 @@ Found 5216 files belonging to 2 classes.
 
 ## Start Training
 
-Run:
+Training uses the JSON configuration:
 
 ```bash
-python3 training/start_training.py
+python -m training.start_training \
+--config config/config_local.json
 ```
 
-The model uses:
-
-* TensorFlow
-* Transfer Learning
-* EfficientNetB0
-* Binary Classification
-
-Training output:
+Pipeline:
 
 ```text
-Epoch 1/10
+Dataset
 
-loss:
-accuracy:
-val_loss:
-val_accuracy:
+ ↓
+
+Preprocessing
+
+ ↓
+
+EfficientNetB0 Transfer Learning
+
+ ↓
+
+Training
+
+ ↓
+
+Model Export
+
+ ↓
+
+pneumonia_model.keras
 ```
 
-After training:
+Output:
 
 ```text
 models/
@@ -260,21 +345,22 @@ models/
 
 # Model Evaluation
 
-Evaluate the trained model:
+Run:
 
 ```bash
-python3 training/evaluate.py
+python -m training.evaluate \
+--config config/config_local.json
 ```
 
-The evaluation provides:
+Metrics:
 
-* Accuracy
-* Precision
-* Recall
-* F1 Score
-* Confusion Matrix
+- Accuracy
+- Precision
+- Recall
+- F1 Score
+- Confusion Matrix
 
-For medical classification, **Recall** is especially important because false negatives should be minimized.
+For medical classification, recall is especially important because false negatives should be minimized.
 
 ---
 
@@ -283,8 +369,9 @@ For medical classification, **Recall** is especially important because false neg
 Run prediction:
 
 ```bash
-python3 inference/predict.py \
-data/raw/chest_xray/test/PNEUMONIA/example.jpeg
+python -m inference.predict \
+--image data/raw/chest_xray/test/PNEUMONIA/example.jpeg \
+--config config/config_local.json
 ```
 
 Example:
@@ -295,16 +382,17 @@ Prediction:
 PNEUMONIA
 
 Confidence:
+
 95.40%
 ```
 
 ---
 
-# AWS Model Storage Setup
+# AWS Model Storage
 
-The project uses **Amazon S3** to store trained models.
+The project uses Amazon S3 as model storage.
 
-AWS workflow:
+Workflow:
 
 ```text
 Training
@@ -315,7 +403,7 @@ pneumonia_model.keras
 
     ↓
 
-Amazon S3 Bucket
+Amazon S3
 
     ↓
 
@@ -328,210 +416,71 @@ Inference
 
 ---
 
-# AWS Account Setup
+# AWS Setup
 
-## 1. Create AWS Account
-
-Create an AWS account:
-
-https://aws.amazon.com/
-
-Open the AWS Management Console after login.
-
----
-
-# IAM Configuration
-
-## 2. Create IAM User
+## Create IAM User
 
 Do not use the AWS root account.
 
-Create a dedicated IAM user:
-
-```text
-AWS Console
-
-→ IAM
-
-→ Users
-
-→ Create user
-```
-
-Example:
+Create:
 
 ```text
 pneumonia-detection-user
 ```
 
-Enable programmatic access.
-
-The user requires access keys for AWS CLI authentication.
-
----
-
-## 3. Configure IAM Permissions
-
-The user requires S3 permissions.
-
-Example policy:
+Required permissions:
 
 ```json
 {
-    "Version": "2012-10-17",
-    "Statement": [
-        {
-            "Effect": "Allow",
-            "Action": [
-                "s3:GetObject",
-                "s3:PutObject",
-                "s3:ListBucket"
-            ],
-            "Resource": "*"
-        }
-    ]
+    "Effect": "Allow",
+    "Action": [
+        "s3:GetObject",
+        "s3:PutObject",
+        "s3:ListBucket"
+    ],
+    "Resource": "*"
 }
 ```
 
-Attach the policy to the IAM user.
-
-For production environments, restrict permissions to the required S3 bucket only.
+For production environments restrict access to the required bucket.
 
 ---
 
-## 4. Create AWS Access Keys
-
-Open:
-
-```text
-AWS Console
-
-→ IAM
-
-→ Users
-
-→ pneumonia-detection-user
-
-→ Security credentials
-```
-
-Create a new access key.
-
-You receive:
-
-```text
-AWS Access Key ID
-
-AWS Secret Access Key
-```
-
-Example environment variables:
-
-```text
-AWS_ACCESS_KEY_ID
-
-AWS_SECRET_ACCESS_KEY
-```
-
-Store them securely.
-
-Never upload credentials to GitHub.
-
----
-
-# AWS CLI Setup
-
-## 5. Install AWS CLI
+# AWS CLI Configuration
 
 Install:
-
-https://aws.amazon.com/cli/
-
-Verify:
 
 ```bash
 aws --version
 ```
 
-Example:
-
-```text
-aws-cli/2.x.x
-```
-
----
-
-## 6. Configure AWS CLI
-
-Run:
+Configure:
 
 ```bash
 aws configure
 ```
 
-Enter:
+Example:
 
 ```text
-AWS Access Key ID:
-YOUR_ACCESS_KEY
-
-AWS Secret Access Key:
-YOUR_SECRET_KEY
-
-Default region name:
+Region:
 eu-central-1
 
-Default output format:
+Output:
 json
 ```
 
----
-
-## 7. Test AWS Connection
-
-Verify authentication:
+Verify:
 
 ```bash
 aws sts get-caller-identity
 ```
 
-Example:
-
-```json
-{
-    "UserId": "xxxxxxxx",
-    "Account": "xxxxxxxx",
-    "Arn": "arn:aws:iam::xxxxxxxx:user/pneumonia-detection-user"
-}
-```
-
-If the IAM user information is returned, the AWS configuration is complete.
-
 ---
 
-# Amazon S3 Model Storage
-
-## 8. Create S3 Bucket
-
-Create a bucket:
-
-```text
-AWS Console
-
-→ S3
-
-→ Create bucket
-```
+# S3 Bucket Structure
 
 Example:
-
-```text
-codebymaxx-pneumonia-models
-```
-
-Bucket names must be globally unique.
-
-Recommended structure:
 
 ```text
 s3://codebymaxx-pneumonia-models/
@@ -545,10 +494,11 @@ s3://codebymaxx-pneumonia-models/
 
 # Upload Model
 
-After successful training:
+After training:
 
 ```bash
-python3 training/upload_model.py
+python -m training.upload_model \
+--config config/config_aws.json
 ```
 
 Uploads:
@@ -560,7 +510,7 @@ models/pneumonia_model.keras
 to:
 
 ```text
-s3://YOUR_BUCKET_NAME/models/pneumonia_model.keras
+Amazon S3
 ```
 
 ---
@@ -570,22 +520,15 @@ s3://YOUR_BUCKET_NAME/models/pneumonia_model.keras
 For inference:
 
 ```bash
-python3 inference/download_model.py
-```
-
-The model is stored locally:
-
-```text
-models/
-
-└── pneumonia_model.keras
+python -m inference.download_model \
+--config config/config_aws.json
 ```
 
 ---
 
-# AWS Security
+# Security
 
-Never commit sensitive files:
+Never commit:
 
 ```text
 .aws/
@@ -595,24 +538,23 @@ credentials
 
 Never upload:
 
-* AWS Access Keys
-* AWS Secret Keys
-* AWS credentials
-* Private configuration files
+- AWS Access Keys
+- AWS Secret Keys
+- Private credentials
 
-For production environments use:
+Production recommendations:
 
-* IAM Roles
-* EC2 Instance Profiles
-* AWS Secrets Manager
+- IAM Roles
+- EC2 Instance Profiles
+- AWS Secrets Manager
 
 ---
 
 # Optional AWS EC2 GPU Training
 
-For larger workloads, training can run on AWS GPU instances.
+For larger workloads the project can run on AWS GPU instances.
 
-Recommended instances:
+Recommended:
 
 ```text
 g4dn.xlarge
@@ -627,11 +569,7 @@ AWS EC2 GPU Instance
 
         ↓
 
-NVIDIA Drivers
-
-        ↓
-
-CUDA + TensorFlow
+CUDA + TensorFlow Setup
 
         ↓
 
@@ -639,7 +577,7 @@ Dataset Download
 
         ↓
 
-Model Training
+Training
 
         ↓
 
@@ -648,41 +586,104 @@ Upload Model to S3
 
 ---
 
-# Complete End-to-End Workflow
+# Future Deployment Roadmap
+
+## FastAPI Prediction Service
+
+Planned architecture:
+
+```text
+Client
+
+ ↓
+
+FastAPI
+
+ ↓
+
+TensorFlow Model
+
+ ↓
+
+Prediction JSON
+```
+
+Example response:
+
+```json
+{
+    "prediction": "PNEUMONIA",
+    "confidence": 0.954
+}
+```
+
+---
+
+## Docker Deployment
+
+Planned:
+
+```text
+Docker Container
+
+        ↓
+
+FastAPI
+
+        ↓
+
+TensorFlow Model
+
+        ↓
+
+Prediction API
+```
+
+---
+
+# Complete ML Workflow
 
 ```text
 Developer Machine
 
         ↓
 
-Prepare Dataset
+Dataset Preparation
 
         ↓
 
-Train Model
+Configuration Driven Training
 
         ↓
 
-Evaluate Model
+Model Evaluation
 
         ↓
 
-Test Prediction
+Model Version
 
         ↓
 
-Upload Model
+Upload to AWS S3
 
         ↓
 
-Amazon S3
+Inference Service
 
         ↓
 
-Download Anywhere
-
-        ↓
-
-Inference
+Prediction
 ```
 
+---
+
+# Project Goals
+
+This project demonstrates:
+
+- Deep Learning model development
+- GPU accelerated training
+- Cloud based model storage
+- ML pipeline design
+- Production oriented architecture
+- Deployment preparation
