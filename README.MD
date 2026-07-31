@@ -1,94 +1,206 @@
-# AWS Pneumonia Detection Model
+# AWS Pneumonia Detection System
 
-End-to-end Deep Learning project for detecting pneumonia from chest X-Ray images using **TensorFlow**, **EfficientNetB0**, and **AWS infrastructure**.
+Deep Learning application for detecting pneumonia from chest X-Ray images using **TensorFlow, EfficientNetB0, FastAPI and AWS infrastructure**.
 
-The project demonstrates a complete machine learning workflow:
+The goal of this project is to build an end-to-end machine learning system:
 
-- Data preparation
-- GPU accelerated model training
-- Model evaluation
-- Local inference
-- Configuration-driven training
-- AWS S3 model storage
-- Optional AWS EC2 GPU training
-- Planned FastAPI inference service
-- Planned Docker deployment
+* Train a medical image classification model
+* Evaluate model performance
+* Store models in AWS S3
+* Provide a web interface for prediction and training
+* Deploy a production-style ML workflow
 
 ---
 
-# Architecture Overview
+# Project Overview
 
-```text
-                Chest X-Ray Dataset
+## Problem
 
-                        |
-                        ↓
+Pneumonia detection from chest X-Ray images is a binary image classification problem.
 
-              Data Preprocessing
+The model predicts:
 
-                        |
-                        ↓
+```
+NORMAL
+```
 
-          TensorFlow EfficientNetB0
+or
 
-                        |
-                        ↓
+```
+PNEUMONIA
+```
 
-              Model Evaluation
+based on an input X-Ray image.
 
-                        |
-                        ↓
+---
 
-              pneumonia_model.keras
+## Solution Architecture
 
-                        |
-                        ↓
+```
+Chest X-Ray Dataset
 
-                 Amazon S3
+        |
+        v
 
-                        |
-                        ↓
+Data Preprocessing
 
-              Inference Service
+        |
+        v
+
+TensorFlow Training
+
+        |
+        v
+
+EfficientNetB0 Transfer Learning
+
+        |
+        v
+
+Model Evaluation
+
+        |
+        v
+
+pneumonia_model.keras
+
+        |
+        v
+
+FastAPI Application
+
+        |
+        +----------------+
+        |                |
+        v                v
+
+Prediction        Training Dashboard
+
+        |
+        v
+
+AWS S3 Storage
 ```
 
 ---
 
-# Project Structure
+# Project Demo Screenshots
 
-```text
-aws-pneumonia-detection/
+## 1. Dashboard
 
-├── config/
-│   ├── config_local.json
-│   └── config_aws.json
-│
-├── data/
-│   └── raw/
-│       └── chest_xray/
-│           ├── train/
-│           ├── test/
-│           └── val/
-│
-├── models/
-│   └── pneumonia_model.keras
-│
-├── utils/
-│   └── config_loader.py
-│
-├── training/
-│   ├── preprocess.py
-│   ├── start_training.py
-│   ├── evaluate.py
-│   └── upload_model.py
-│
-├── inference/
-│   ├── predict.py
-│   └── download_model.py
-│
-├── requirements.txt
-└── README.md
+*Add screenshot here*
+
+Example:
+
 ```
+screenshots/dashboard.png
+```
+
+The dashboard provides:
+
+* System information
+* GPU configuration
+* Links to all application features
+
+---
+
+## 2. Prediction Interface
+
+*Add screenshot here*
+
+Example:
+
+```
+screenshots/predict.png
+```
+
+Features:
+
+* Upload X-Ray image
+* Run inference
+* Display prediction result
+* Display confidence score
+
+Example:
+
+```
+Input:
+
+Chest X-Ray
+
+↓
+
+Model
+
+↓
+
+Prediction:
+
+PNEUMONIA
+
+Confidence:
+
+95.4%
+```
+
+---
+
+## 3. Training Interface
+
+*Add screenshot here*
+
+Example:
+
+```
+screenshots/training.png
+```
+
+Features:
+
+* Start training from browser
+* Background execution
+* Training status monitoring
+* Log output
+
+---
+
+## 4. Model Management
+
+*Add screenshot here*
+
+Example:
+
+```
+screenshots/models.png
+```
+
+Displays:
+
+* Model name
+* Model location
+* File size
+* Last modification date
+* Availability status
+
+---
+
+## 5. Evaluation Dashboard
+
+*Add screenshot here*
+
+Example:
+
+```
+screenshots/evaluation.png
+```
+
+Shows:
+
+* Accuracy
+* Precision
+* Recall
+* F1 Score
+* Model performance
 
 ---
 
@@ -96,32 +208,316 @@ aws-pneumonia-detection/
 
 ## Machine Learning
 
-- Python 3.12
-- TensorFlow 2.21
-- EfficientNetB0
-- Transfer Learning
-- Binary Image Classification
-
-## Infrastructure
-
-- AWS S3
-- AWS EC2 GPU Instances
-- AWS CLI
-- boto3
-
-## Development
-
-- Virtual Environment
-- JSON Configuration
-- Git
-- Docker (planned)
-- FastAPI (planned)
+| Technology     | Purpose                 |
+| -------------- | ----------------------- |
+| TensorFlow     | Deep Learning Framework |
+| EfficientNetB0 | Transfer Learning Model |
+| Keras          | Model API               |
+| OpenCV         | Image Processing        |
+| Scikit-Learn   | Evaluation Metrics      |
 
 ---
 
-# Local Setup
+## Backend
 
-## 1. Clone Repository
+| Technology       | Purpose       |
+| ---------------- | ------------- |
+| FastAPI          | REST API      |
+| Uvicorn          | ASGI Server   |
+| Jinja2           | Web Templates |
+| Python Multipart | File Uploads  |
+
+---
+
+## Cloud Infrastructure
+
+| Technology | Purpose           |
+| ---------- | ----------------- |
+| AWS S3     | Model Storage     |
+| AWS EC2    | GPU Training      |
+| IAM        | Access Management |
+
+---
+
+# Machine Learning Pipeline
+
+## Dataset
+
+Dataset:
+
+Kaggle Chest X-Ray Pneumonia Dataset
+
+Structure:
+
+```
+data/
+
+└── raw/
+
+    └── chest_xray/
+
+        ├── train/
+
+        │   ├── NORMAL
+
+        │   └── PNEUMONIA
+
+
+        ├── validation/
+
+        └── test/
+```
+
+---
+
+# Model Training
+
+The model uses:
+
+* Transfer Learning
+* EfficientNetB0
+* Binary Classification
+* GPU acceleration
+
+Training configuration:
+
+```
+Image Size:
+
+224 x 224
+
+
+Epochs:
+
+10
+
+
+Optimizer:
+
+Adam
+
+
+Learning Rate:
+
+0.0001
+```
+
+Output:
+
+```
+models/
+
+└── pneumonia_model.keras
+```
+
+---
+
+# Model Evaluation
+
+Medical classification requires focusing on recall.
+
+Important metrics:
+
+## Accuracy
+
+Overall correctness of predictions.
+
+## Precision
+
+How many positive predictions were correct.
+
+## Recall
+
+How many pneumonia cases were detected.
+
+## F1 Score
+
+Balance between precision and recall.
+
+---
+
+# FastAPI Web Application
+
+The application provides:
+
+## Dashboard
+
+```
+/
+```
+
+Overview of the system.
+
+---
+
+## Prediction
+
+```
+/predict
+```
+
+Upload an X-Ray image and receive:
+
+```
+Prediction:
+
+PNEUMONIA
+
+
+Confidence:
+
+95%
+```
+
+---
+
+## Training
+
+```
+/train
+```
+
+Starts model training from the browser.
+
+Uses:
+
+```
+FastAPI BackgroundTasks
+```
+
+to run training without blocking the server.
+
+---
+
+## Model Information
+
+```
+/models
+```
+
+Shows:
+
+* Current model
+* Path
+* Size
+* Status
+
+---
+
+## Evaluation
+
+```
+/evaluation
+```
+
+Displays model metrics.
+
+---
+
+## Configuration
+
+```
+/settings
+```
+
+Shows current application configuration.
+
+---
+
+# Configuration
+
+Example:
+
+```
+config/config_local.json
+```
+
+Contains:
+
+```json
+{
+    "environment": "local",
+
+    "model": {
+        "path": "models/pneumonia_model.keras",
+        "image_size": [
+            224,
+            224
+        ]
+    },
+
+    "training": {
+        "epochs": 10,
+        "batch_size": 2
+    },
+
+    "hardware": {
+        "device": "gpu"
+    }
+}
+```
+
+---
+
+# AWS Workflow
+
+```
+Local Training
+
+        |
+
+        v
+
+pneumonia_model.keras
+
+        |
+
+        v
+
+AWS S3 Bucket
+
+        |
+
+        v
+
+Download Model
+
+        |
+
+        v
+
+Inference
+```
+
+---
+
+# Security
+
+Sensitive information is never stored in the repository.
+
+Protected:
+
+```
+.env
+
+AWS credentials
+
+Access keys
+
+Private configuration
+```
+
+Production approach:
+
+* IAM Roles
+* EC2 Instance Profiles
+* AWS Secrets Manager
+
+---
+
+# Local Installation
+
+Clone repository:
 
 ```bash
 git clone https://github.com/CodeByMaxx/aws-pneumonia-detection.git
@@ -129,11 +525,7 @@ git clone https://github.com/CodeByMaxx/aws-pneumonia-detection.git
 cd aws-pneumonia-detection
 ```
 
----
-
-# 2. Create Python Environment
-
-Create virtual environment:
+Create environment:
 
 ```bash
 python3 -m venv .venv
@@ -147,543 +539,49 @@ Linux:
 source .venv/bin/activate
 ```
 
-Windows:
-
-```bash
-.venv\Scripts\activate
-```
-
----
-
-# 3. Install Dependencies
+Install:
 
 ```bash
 pip install -r requirements.txt
 ```
 
-Main dependencies:
-
-- TensorFlow
-- NumPy
-- Pandas
-- Scikit-Learn
-- OpenCV
-- boto3
-
----
-
-# Configuration
-
-Training parameters are stored in JSON files.
-
-Example:
-
-```json
-{
-    "image_size": [224,224],
-    "batch_size": 32,
-    "epochs": 10,
-    "learning_rate": 0.0001,
-    "model_path": "models/pneumonia_model.keras"
-}
-```
-
-This allows different environments:
-
-```text
-config/
-
-├── config_local.json
-
-└── config_aws.json
-```
-
-without changing Python code.
-
----
-
-# Dataset Preparation
-
-This project uses the Kaggle Chest X-Ray Pneumonia dataset.
-
-Download:
+Start application:
 
 ```bash
-kaggle datasets download \
--d paultimothymooney/chest-xray-pneumonia
+uvicorn api.main:app --reload
 ```
 
-Extract:
+Open:
 
-```bash
-unzip chest-xray-pneumonia.zip -d data/raw
 ```
-
-Expected structure:
-
-```text
-data/
-
-└── raw/
-
-    └── chest_xray/
-
-        ├── train/
-
-        │   ├── NORMAL/
-
-        │   └── PNEUMONIA/
-
-        ├── test/
-
-        └── val/
+http://127.0.0.1:8000
 ```
 
 ---
 
-# GPU Environment
+# Future Improvements
 
-The project supports NVIDIA GPU acceleration.
+Possible extensions:
 
-Test TensorFlow GPU detection:
-
-```bash
-python -c "import tensorflow as tf; print(tf.config.list_physical_devices('GPU'))"
-```
-
-Example:
-
-```text
-[
- PhysicalDevice(
- name='/physical_device:GPU:0',
- device_type='GPU'
- )
-]
-```
-
-Tested environment:
-
-```text
-GPU:
-NVIDIA GeForce GTX 1660 Ti
-
-TensorFlow:
-2.21.0
-
-CUDA:
-12.5
-
-cuDNN:
-9
-```
+* Docker deployment
+* AWS ECS deployment
+* CI/CD pipeline
+* Automated retraining
+* Training with different parameters
 
 ---
 
-# Training Pipeline
+# Interview Explanation
 
-## Preprocessing
+Short explanation:
 
-Run:
-
-```bash
-python -m training.preprocess
-```
-
-Example:
-
-```text
-Found 5216 files belonging to 2 classes.
-```
+> "I built an end-to-end machine learning application for pneumonia detection. The project includes data preprocessing, transfer learning with EfficientNetB0, model evaluation, AWS S3 model storage and a FastAPI web interface where users can run predictions and trigger training."
 
 ---
 
-## Start Training
+# Author
 
-Training uses the JSON configuration:
+Markus
 
-```bash
-python -m training.start_training \
---config config/config_local.json
-```
+Machine Learning / Cloud Project
 
-Pipeline:
-
-```text
-Dataset
-
- ↓
-
-Preprocessing
-
- ↓
-
-EfficientNetB0 Transfer Learning
-
- ↓
-
-Training
-
- ↓
-
-Model Export
-
- ↓
-
-pneumonia_model.keras
-```
-
-Output:
-
-```text
-models/
-
-└── pneumonia_model.keras
-```
-
----
-
-# Model Evaluation
-
-Run:
-
-```bash
-python -m training.evaluate \
---config config/config_local.json
-```
-
-Metrics:
-
-- Accuracy
-- Precision
-- Recall
-- F1 Score
-- Confusion Matrix
-
-For medical classification, recall is especially important because false negatives should be minimized.
-
----
-
-# Local Inference
-
-Run prediction:
-
-```bash
-python -m inference.predict \
---image data/raw/chest_xray/test/PNEUMONIA/example.jpeg \
---config config/config_local.json
-```
-
-Example:
-
-```text
-Prediction:
-
-PNEUMONIA
-
-Confidence:
-
-95.40%
-```
-
----
-
-# AWS Model Storage
-
-The project uses Amazon S3 as model storage.
-
-Workflow:
-
-```text
-Training
-
-    ↓
-
-pneumonia_model.keras
-
-    ↓
-
-Amazon S3
-
-    ↓
-
-Download Model
-
-    ↓
-
-Inference
-```
-
----
-
-# AWS Setup
-
-## Create IAM User
-
-Do not use the AWS root account.
-
-Create:
-
-```text
-pneumonia-detection-user
-```
-
-Required permissions:
-
-```json
-{
-    "Effect": "Allow",
-    "Action": [
-        "s3:GetObject",
-        "s3:PutObject",
-        "s3:ListBucket"
-    ],
-    "Resource": "*"
-}
-```
-
-For production environments restrict access to the required bucket.
-
----
-
-# AWS CLI Configuration
-
-Install:
-
-```bash
-aws --version
-```
-
-Configure:
-
-```bash
-aws configure
-```
-
-Example:
-
-```text
-Region:
-eu-central-1
-
-Output:
-json
-```
-
-Verify:
-
-```bash
-aws sts get-caller-identity
-```
-
----
-
-# S3 Bucket Structure
-
-Example:
-
-```text
-s3://codebymaxx-pneumonia-models/
-
-└── models/
-
-    └── pneumonia_model.keras
-```
-
----
-
-# Upload Model
-
-After training:
-
-```bash
-python -m training.upload_model \
---config config/config_aws.json
-```
-
-Uploads:
-
-```text
-models/pneumonia_model.keras
-```
-
-to:
-
-```text
-Amazon S3
-```
-
----
-
-# Download Model
-
-For inference:
-
-```bash
-python -m inference.download_model \
---config config/config_aws.json
-```
-
----
-
-# Security
-
-Never commit:
-
-```text
-.aws/
-.env
-credentials
-```
-
-Never upload:
-
-- AWS Access Keys
-- AWS Secret Keys
-- Private credentials
-
-Production recommendations:
-
-- IAM Roles
-- EC2 Instance Profiles
-- AWS Secrets Manager
-
----
-
-# Optional AWS EC2 GPU Training
-
-For larger workloads the project can run on AWS GPU instances.
-
-Recommended:
-
-```text
-g4dn.xlarge
-
-g5.xlarge
-```
-
-Workflow:
-
-```text
-AWS EC2 GPU Instance
-
-        ↓
-
-CUDA + TensorFlow Setup
-
-        ↓
-
-Dataset Download
-
-        ↓
-
-Training
-
-        ↓
-
-Upload Model to S3
-```
-
----
-
-# Future Deployment Roadmap
-
-## FastAPI Prediction Service
-
-Planned architecture:
-
-```text
-Client
-
- ↓
-
-FastAPI
-
- ↓
-
-TensorFlow Model
-
- ↓
-
-Prediction JSON
-```
-
-Example response:
-
-```json
-{
-    "prediction": "PNEUMONIA",
-    "confidence": 0.954
-}
-```
-
----
-
-## Docker Deployment
-
-Planned:
-
-```text
-Docker Container
-
-        ↓
-
-FastAPI
-
-        ↓
-
-TensorFlow Model
-
-        ↓
-
-Prediction API
-```
-
----
-
-# Complete ML Workflow
-
-```text
-Developer Machine
-
-        ↓
-
-Dataset Preparation
-
-        ↓
-
-Configuration Driven Training
-
-        ↓
-
-Model Evaluation
-
-        ↓
-
-Model Version
-
-        ↓
-
-Upload to AWS S3
-
-        ↓
-
-Inference Service
-
-        ↓
-
-Prediction
-```
-
----
-
-# Project Goals
-
-This project demonstrates:
-
-- Deep Learning model development
-- GPU accelerated training
-- Cloud based model storage
-- ML pipeline design
-- Production oriented architecture
-- Deployment preparation
