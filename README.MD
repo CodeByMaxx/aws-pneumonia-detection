@@ -2,13 +2,18 @@
 
 Deep Learning application for detecting pneumonia from chest X-Ray images using **TensorFlow, EfficientNetB0, FastAPI and AWS infrastructure**.
 
-The goal of this project is to build an end-to-end machine learning system:
+This project demonstrates an end-to-end machine learning workflow:
 
-* Train a medical image classification model
-* Evaluate model performance
-* Store models in AWS S3
-* Provide a web interface for prediction and training
-* Deploy a production-style ML workflow
+* Dataset preparation
+* Image preprocessing
+* Deep learning model training
+* Model evaluation
+* Local GPU acceleration
+* Configuration-driven architecture
+* FastAPI web application
+* Model inference
+* AWS S3 model storage
+* Optional AWS GPU training
 
 ---
 
@@ -30,11 +35,15 @@ or
 PNEUMONIA
 ```
 
-based on an input X-Ray image.
+based on an input chest X-Ray image.
 
 ---
 
-## Solution Architecture
+# System Architecture
+
+![Architecture](screenshots/architecture.png)
+
+Workflow:
 
 ```
 Chest X-Ray Dataset
@@ -84,168 +93,156 @@ AWS S3 Storage
 
 ---
 
-# Project Demo Screenshots
+# Project Structure
 
-## 1. Dashboard
+```
+aws-pneumonia-detection/
 
-*Add screenshot here*
+├── api/
+│   ├── main.py
+│   ├── dependencies.py
+│   ├── routes/
+│   │   ├── predict.py
+│   │   ├── train.py
+│   │   ├── models.py
+│   │   ├── evaluation.py
+│   │   └── settings.py
+│   └── templates/
+
+├── config/
+│   ├── config_local.json
+│   ├── config_gpu.json
+│   └── config_aws.json
+
+├── data/
+│   └── raw/
+│       └── chest_xray/
+
+├── inference/
+│   └── predict.py
+
+├── training/
+│   ├── start_training.py
+│   ├── evaluate.py
+│   └── upload_model.py
+
+├── models/
+│   └── pneumonia_model.keras
+
+├── utils/
+│   └── config_loader.py
+
+├── screenshots/
+
+├── requirements.txt
+
+└── README.md
+```
+
+---
+
+# Configuration Driven Architecture
+
+The application does not hardcode paths or settings.
+
+Configuration is injected through environment variables.
+
+The same codebase can run in different environments:
+
+* Local development
+* Local GPU training
+* AWS EC2 training
+* Production deployment
+
+Architecture:
+
+```
+Environment Variable
+
+        |
+
+        v
+
+CONFIG_PATH
+
+        |
+
+        v
+
+config_loader.py
+
+        |
+
+        v
+
+config.json
+
+        |
+
+        v
+
+FastAPI / Training / Inference
+```
+
+---
+
+# Configuration Example
 
 Example:
 
 ```
-screenshots/dashboard.png
+config/config_local.json
 ```
 
-The dashboard provides:
+```json
+{
+    "environment": "local",
 
-* System information
-* GPU configuration
-* Links to all application features
+    "dataset": {
+        "path": "data/raw/chest_xray",
+        "train": "train",
+        "validation": "val",
+        "test": "test"
+    },
 
----
+    "model": {
+        "path": "models/pneumonia_model.keras",
+        "image_size": [
+            224,
+            224
+        ]
+    },
 
-## 2. Prediction Interface
+    "training": {
+        "epochs": 10,
+        "batch_size": 2,
+        "learning_rate": 0.0001,
+        "transfer_learning": true
+    },
 
-*Add screenshot here*
+    "hardware": {
+        "device": "gpu",
+        "mixed_precision": false
+    },
 
-Example:
+    "aws": {
+        "enabled": false,
+        "region": "eu-central-1"
+    },
 
-```
-screenshots/predict.png
-```
-
-Features:
-
-* Upload X-Ray image
-* Run inference
-* Display prediction result
-* Display confidence score
-
-Example:
-
-```
-Input:
-
-Chest X-Ray
-
-↓
-
-Model
-
-↓
-
-Prediction:
-
-PNEUMONIA
-
-Confidence:
-
-95.4%
+    "inference": {
+        "confidence_threshold": 0.5
+    }
+}
 ```
 
 ---
 
-## 3. Training Interface
-
-*Add screenshot here*
-
-Example:
-
-```
-screenshots/training.png
-```
-
-Features:
-
-* Start training from browser
-* Background execution
-* Training status monitoring
-* Log output
-
----
-
-## 4. Model Management
-
-*Add screenshot here*
-
-Example:
-
-```
-screenshots/models.png
-```
-
-Displays:
-
-* Model name
-* Model location
-* File size
-* Last modification date
-* Availability status
-
----
-
-## 5. Evaluation Dashboard
-
-*Add screenshot here*
-
-Example:
-
-```
-screenshots/evaluation.png
-```
-
-Shows:
-
-* Accuracy
-* Precision
-* Recall
-* F1 Score
-* Model performance
-
----
-
-# Technology Stack
-
-## Machine Learning
-
-| Technology     | Purpose                 |
-| -------------- | ----------------------- |
-| TensorFlow     | Deep Learning Framework |
-| EfficientNetB0 | Transfer Learning Model |
-| Keras          | Model API               |
-| OpenCV         | Image Processing        |
-| Scikit-Learn   | Evaluation Metrics      |
-
----
-
-## Backend
-
-| Technology       | Purpose       |
-| ---------------- | ------------- |
-| FastAPI          | REST API      |
-| Uvicorn          | ASGI Server   |
-| Jinja2           | Web Templates |
-| Python Multipart | File Uploads  |
-
----
-
-## Cloud Infrastructure
-
-| Technology | Purpose           |
-| ---------- | ----------------- |
-| AWS S3     | Model Storage     |
-| AWS EC2    | GPU Training      |
-| IAM        | Access Management |
-
----
-
-# Machine Learning Pipeline
-
-## Dataset
+# Dataset
 
 Dataset:
 
-Kaggle Chest X-Ray Pneumonia Dataset
+**Kaggle Chest X-Ray Pneumonia Dataset**
 
 Structure:
 
@@ -263,10 +260,23 @@ data/
         │   └── PNEUMONIA
 
 
-        ├── validation/
+        ├── val/
 
         └── test/
 ```
+
+---
+
+# Machine Learning Pipeline
+
+## Preprocessing
+
+The preprocessing pipeline:
+
+* Loads X-Ray images
+* Resizes images
+* Normalizes pixel values
+* Creates TensorFlow datasets
 
 ---
 
@@ -274,10 +284,11 @@ data/
 
 The model uses:
 
-* Transfer Learning
+* TensorFlow
+* Keras
 * EfficientNetB0
+* Transfer Learning
 * Binary Classification
-* GPU acceleration
 
 Training configuration:
 
@@ -314,7 +325,7 @@ models/
 
 # Model Evaluation
 
-Medical classification requires focusing on recall.
+Medical classification requires focusing on more than accuracy.
 
 Important metrics:
 
@@ -330,6 +341,8 @@ How many positive predictions were correct.
 
 How many pneumonia cases were detected.
 
+High recall is important because missing pneumonia cases should be minimized.
+
 ## F1 Score
 
 Balance between precision and recall.
@@ -338,27 +351,65 @@ Balance between precision and recall.
 
 # FastAPI Web Application
 
-The application provides:
+The project provides a browser-based interface.
 
 ## Dashboard
+
+Route:
 
 ```
 /
 ```
 
-Overview of the system.
+Features:
+
+* System overview
+* GPU information
+* Navigation
+
+![Dashboard](screenshots/dashboard.png)
 
 ---
 
-## Prediction
+# Prediction Interface
+
+Route:
 
 ```
 /predict
 ```
 
-Upload an X-Ray image and receive:
+Users can upload an X-Ray image and receive a prediction.
+
+Features:
+
+* Image upload
+* Model inference
+* Confidence score
+
+![Prediction](screenshots/predict.png)
+
+Example:
 
 ```
+Input:
+
+Chest X-Ray
+
+
+        |
+
+        v
+
+
+EfficientNetB0
+
+
+        |
+
+        v
+
+
 Prediction:
 
 PNEUMONIA
@@ -366,134 +417,134 @@ PNEUMONIA
 
 Confidence:
 
-95%
+95.4%
 ```
 
 ---
 
-## Training
+# Training Interface
+
+Route:
 
 ```
 /train
 ```
 
-Starts model training from the browser.
+Training can be started directly from the browser.
 
-Uses:
+Features:
+
+* Start training
+* Background execution
+* Training status
+* Logs
+
+Training uses:
 
 ```
 FastAPI BackgroundTasks
 ```
 
-to run training without blocking the server.
+![Training](screenshots/training.png)
 
 ---
 
-## Model Information
+# Model Management
+
+Route:
 
 ```
 /models
 ```
 
-Shows:
+Displays:
 
 * Current model
-* Path
-* Size
-* Status
+* Model path
+* File size
+* Last modification date
+* Model availability
+
+![Models](screenshots/models.png)
 
 ---
 
-## Evaluation
+# Evaluation Dashboard
+
+Route:
 
 ```
 /evaluation
 ```
 
-Displays model metrics.
+Displays:
+
+* Accuracy
+* Precision
+* Recall
+* F1 Score
+* Evaluation results
+
+![Evaluation](screenshots/evaluation.png)
 
 ---
 
-## Configuration
+# Settings
+
+Route:
 
 ```
 /settings
 ```
 
-Shows current application configuration.
+Shows:
+
+* Active environment
+* Loaded configuration
+* Hardware settings
+* AWS settings
 
 ---
 
-# Configuration
+# AWS Integration
 
-Example:
+The project supports AWS S3 model storage.
 
-```
-config/config_local.json
-```
-
-Contains:
-
-```json
-{
-    "environment": "local",
-
-    "model": {
-        "path": "models/pneumonia_model.keras",
-        "image_size": [
-            224,
-            224
-        ]
-    },
-
-    "training": {
-        "epochs": 10,
-        "batch_size": 2
-    },
-
-    "hardware": {
-        "device": "gpu"
-    }
-}
-```
-
----
-
-# AWS Workflow
+Workflow:
 
 ```
-Local Training
+Training
 
-        |
+    |
 
-        v
+    v
 
 pneumonia_model.keras
 
-        |
+    |
 
-        v
+    v
 
 AWS S3 Bucket
 
-        |
+    |
 
-        v
+    v
 
 Download Model
 
-        |
+    |
 
-        v
+    v
 
 Inference
 ```
 
 ---
 
-# Security
+# AWS Security
 
-Sensitive information is never stored in the repository.
+Sensitive data is never stored in the repository.
 
 Protected:
 
@@ -504,7 +555,7 @@ AWS credentials
 
 Access keys
 
-Private configuration
+Secrets
 ```
 
 Production approach:
@@ -515,15 +566,7 @@ Production approach:
 
 ---
 
-# Local Installation
-
-Clone repository:
-
-```bash
-git clone https://github.com/CodeByMaxx/aws-pneumonia-detection.git
-
-cd aws-pneumonia-detection
-```
+# Running the Application
 
 Create environment:
 
@@ -539,15 +582,20 @@ Linux:
 source .venv/bin/activate
 ```
 
-Install:
+Install dependencies:
 
 ```bash
 pip install -r requirements.txt
 ```
 
-Start application:
+---
+
+# Start FastAPI Application
+
+Local:
 
 ```bash
+CONFIG_PATH=config/config_local.json \
 uvicorn api.main:app --reload
 ```
 
@@ -559,6 +607,31 @@ http://127.0.0.1:8000
 
 ---
 
+# Training
+
+Local:
+
+```bash
+CONFIG_PATH=config/config_local.json \
+python training/start_training.py
+```
+
+GPU:
+
+```bash
+CONFIG_PATH=config/config_gpu.json \
+python training/start_training.py
+```
+
+AWS:
+
+```bash
+CONFIG_PATH=config/config_aws.json \
+python training/start_training.py
+```
+
+---
+
 # Future Improvements
 
 Possible extensions:
@@ -566,16 +639,19 @@ Possible extensions:
 * Docker deployment
 * AWS ECS deployment
 * CI/CD pipeline
+* Model versioning
+* User authentication
 * Automated retraining
-* Training with different parameters
+* Monitoring with AWS CloudWatch
+* Model registry
 
 ---
 
 # Interview Explanation
 
-Short explanation:
+Short project explanation:
 
-> "I built an end-to-end machine learning application for pneumonia detection. The project includes data preprocessing, transfer learning with EfficientNetB0, model evaluation, AWS S3 model storage and a FastAPI web interface where users can run predictions and trigger training."
+> I built an end-to-end machine learning application for pneumonia detection from chest X-Ray images. The system includes data preprocessing, transfer learning with EfficientNetB0, model evaluation, AWS S3 model storage and a FastAPI web interface where users can run predictions and trigger training.
 
 ---
 
@@ -583,5 +659,5 @@ Short explanation:
 
 Markus
 
-Machine Learning / Cloud Project
+Machine Learning / Cloud Engineering Project
 
