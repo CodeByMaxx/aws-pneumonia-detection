@@ -1,0 +1,38 @@
+{
+    "project": {
+        "name": "aws-pneumonia-detection"
+    },
+
+    "dataset": {
+        "path": "data/raw/chest_xray",
+        "train": "train",
+        "validation": "val",
+        "test": "test"
+    },
+
+    "model": {
+        "name": "pneumonia_model.keras",
+        "path": "models/pneumonia_model.keras",
+        "architecture": "EfficientNetB0"
+    },
+
+    "training": {
+        "epochs": 10,
+        "batch_size": 32,
+        "image_size": [
+            224,
+            224
+        ],
+        "learning_rate": 0.0001
+    },
+
+    "aws": {
+        "region": "eu-central-1",
+        "bucket": "codebymaxx-pneumonia-models",
+        "s3_model_path": "models/pneumonia_model.keras"
+    },
+
+    "inference": {
+        "confidence_threshold": 0.5
+    }
+}

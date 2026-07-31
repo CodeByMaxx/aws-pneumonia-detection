@@ -1,94 +1,90 @@
-from pathlib import Path
 import sys
+
 import tensorflow as tf
+
 import numpy as np
 
+from tensorflow.keras.preprocessing import image
 
-IMG_SIZE = (224, 224)
+
+from utils.config_loader import load_config
 
 
-BASE_DIR = Path(__file__).resolve().parent.parent
 
-MODEL_PATH = (
-    BASE_DIR
-    / "models"
-    / "pneumonia_model.keras"
+config = load_config()
+
+
+
+model = tf.keras.models.load_model(
+
+    config["model"]["path"]
+
 )
 
 
-def load_model():
-
-    print("Loading model...")
-
-    model = tf.keras.models.load_model(
-        MODEL_PATH
-    )
-
-    return model
+img_path = sys.argv[1]
 
 
-def preprocess_image(image_path):
+size = tuple(
 
-    image = tf.keras.utils.load_img(
-        image_path,
-        target_size=IMG_SIZE
-    )
+    config["training"]["image_size"]
 
-    image_array = tf.keras.utils.img_to_array(
-        image
-    )
-
-    image_array = np.expand_dims(
-        image_array,
-        axis=0
-    )
-
-    return image_array
+)
 
 
-def predict(image_path):
 
-    model = load_model()
+img = image.load_img(
 
-    image = preprocess_image(
-        image_path
-    )
+    img_path,
 
-    prediction = model.predict(
-        image
-    )[0][0]
+    target_size=size
+
+)
 
 
-    if prediction >= 0.5:
-
-        result = "PNEUMONIA"
-        confidence = prediction
-
-    else:
-
-        result = "NORMAL"
-        confidence = 1 - prediction
+img_array = image.img_to_array(
+    img
+)
 
 
-    print("\nPrediction:")
-    print(result)
+img_array = np.expand_dims(
 
-    print(
-        f"Confidence: {confidence * 100:.2f}%"
-    )
+    img_array,
 
+    axis=0
 
-if __name__ == "__main__":
-
-    if len(sys.argv) != 2:
-
-        print(
-            "Usage: python predict.py <image_path>"
-        )
-
-        sys.exit(1)
+)
 
 
-    image_path = sys.argv[1]
+prediction = model.predict(
+    img_array
+)[0][0]
 
-    predict(image_path)
+
+
+threshold = config["inference"]["confidence_threshold"]
+
+
+
+if prediction >= threshold:
+
+    result = "PNEUMONIA"
+
+else:
+
+    result = "NORMAL"
+
+
+
+print(
+    "Prediction:"
+)
+
+print(
+    result
+)
+
+
+print(
+    f"Confidence: {prediction:.2%}"
+)

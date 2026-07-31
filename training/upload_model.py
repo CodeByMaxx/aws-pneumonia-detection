@@ -1,57 +1,35 @@
-from pathlib import Path
 import boto3
-from botocore.exceptions import ClientError
+
+from utils.config_loader import load_config
 
 
-BASE_DIR = Path(__file__).resolve().parent.parent
 
-MODEL_PATH = (
-    BASE_DIR
-    / "models"
-    / "pneumonia_model.keras"
-)
+config = load_config()
 
-BUCKET_NAME = "codebymaxx-pneumonia-models"
 
-S3_KEY = (
-    "models/pneumonia_model.keras"
+s3 = boto3.client(
+    "s3",
+    region_name=config["aws"]["region"]
 )
 
 
-def upload_model():
 
-    s3 = boto3.client(
-        "s3"
-    )
+s3.upload_file(
 
-    try:
+    config["model"]["path"],
 
-        print("Uploading model...")
+    config["aws"]["bucket"],
 
-        s3.upload_file(
-            str(MODEL_PATH),
-            BUCKET_NAME,
-            S3_KEY
-        )
+    config["aws"]["s3_key"]
 
-        print(
-            "Upload successful!"
-        )
-
-        print(
-            f"s3://{BUCKET_NAME}/{S3_KEY}"
-        )
+)
 
 
-    except ClientError as e:
-
-        print(
-            "Upload failed:"
-        )
-
-        print(e)
+print(
+    "Upload successful"
+)
 
 
-if __name__ == "__main__":
-
-    upload_model()
+print(
+    f"s3://{config['aws']['bucket']}/{config['aws']['s3_key']}"
+)

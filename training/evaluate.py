@@ -1,102 +1,50 @@
-from pathlib import Path
 import tensorflow as tf
+
 from sklearn.metrics import (
     classification_report,
     confusion_matrix
 )
-import numpy as np
+
+from utils.config_loader import load_config
 
 
-IMG_SIZE = (224, 224)
-BATCH_SIZE = 8
+
+config = load_config()
 
 
-BASE_DIR = Path(__file__).resolve().parent.parent
+model_path = config["model"]["path"]
 
-TEST_PATH = (
-    BASE_DIR
-    / "data"
-    / "raw"
-    / "chest_xray"
-    / "test"
-)
 
-MODEL_PATH = (
-    BASE_DIR
-    / "models"
-    / "pneumonia_model.keras"
+model = tf.keras.models.load_model(
+    model_path
 )
 
 
-def load_test_data():
+print(
+    "Model loaded:"
+)
 
-    test_ds = tf.keras.utils.image_dataset_from_directory(
-        TEST_PATH,
-        image_size=IMG_SIZE,
-        batch_size=BATCH_SIZE,
-        label_mode="binary",
-        shuffle=False
-    )
-
-    return test_ds
+print(
+    model_path
+)
 
 
-def evaluate_model():
-
-    print("Loading model...")
-
-    model = tf.keras.models.load_model(
-        MODEL_PATH
-    )
+predictions = model.predict(
+    test_dataset
+)
 
 
-    print("Loading test data...")
-
-    test_ds = load_test_data()
-
-
-    print("Running predictions...")
-
-    predictions = model.predict(test_ds)
-
-
-    y_pred = (
+print(
+    classification_report(
+        test_labels,
         predictions > 0.5
-    ).astype(int).flatten()
-
-
-    y_true = np.concatenate(
-        [
-            y.numpy()
-            for x, y in test_ds
-        ]
-    ).astype(int).flatten()
-
-
-    print("\nClassification Report:\n")
-
-    print(
-        classification_report(
-            y_true,
-            y_pred,
-            target_names=[
-                "NORMAL",
-                "PNEUMONIA"
-            ]
-        )
     )
+)
 
 
-    print("\nConfusion Matrix:\n")
-
-    print(
-        confusion_matrix(
-            y_true,
-            y_pred
-        )
+print(
+    confusion_matrix(
+        test_labels,
+        predictions > 0.5
     )
-
-
-if __name__ == "__main__":
-
-    evaluate_model()
+)

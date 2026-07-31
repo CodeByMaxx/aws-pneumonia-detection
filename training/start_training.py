@@ -1,108 +1,89 @@
 import os
+os.environ["TF_XLA_FLAGS"] = "--tf_xla_auto_jit=0"
 
-os.environ["TF_XLA_FLAGS"] = "--tf_xla_enable_xla_devices=false"
-
-from pathlib import Path
 import tensorflow as tf
 
-gpus = tf.config.list_physical_devices("GPU")
+from utils.config_loader import load_config
+from utils.dataset_loader import load_datasets
 
-from tensorflow.keras import mixed_precision
+config = load_config()
 
-mixed_precision.set_global_policy("float32")
+train_dataset, val_dataset, test_dataset = load_datasets(
+    config
+)
 
-if gpus:
-    for gpu in gpus:
-        tf.config.experimental.set_memory_growth(
-            gpu,
-            True
-        )
+image_size = tuple(
+    config["training"]["image_size"]
+)
 
-    print("GPU memory growth enabled")
+epochs = config["training"]["epochs"]
 
+batch_size = config["training"]["batch_size"]
 
-from tensorflow.keras import layers, models
-from tensorflow.keras.applications import EfficientNetB0
+learning_rate = config["training"]["learning_rate"]
 
-
-IMG_SIZE = (160, 160)
-BATCH_SIZE = 8
-EPOCHS = 10
+model_path = config["model"]["path"]
 
 
-BASE_DIR = Path(__file__).resolve().parent.parent
 
-TRAIN_PATH = BASE_DIR / "data" / "raw" / "chest_xray" / "train"
-VAL_PATH = BASE_DIR / "data" / "raw" / "chest_xray" / "val"
+base_model = tf.keras.applications.EfficientNetB0(
+    input_shape=(
+        image_size[0],
+        image_size[1],
+        3
+    ),
+    include_top=False,
+    weights="imagenet"
+)
 
-MODEL_PATH = BASE_DIR / "models" / "pneumonia_model.keras"
+
+base_model.trainable = False
 
 
-def load_dataset(path):
+model = tf.keras.Sequential([
 
-    return tf.keras.utils.image_dataset_from_directory(
-        path,
-        image_size=IMG_SIZE,
-        batch_size=BATCH_SIZE,
-        label_mode="binary"
+    base_model,
+
+    tf.keras.layers.GlobalAveragePooling2D(),
+
+    tf.keras.layers.Dense(
+        1,
+        activation="sigmoid"
     )
+])
 
 
-def build_model():
+model.compile(
 
-    base_model = EfficientNetB0(
-        include_top=False,
-        weights="imagenet",
-        input_shape=(160,160,3)
-    )
+    optimizer=tf.keras.optimizers.Adam(
+        learning_rate
+    ),
 
-    base_model.trainable = False
+    loss="binary_crossentropy",
 
-    model = models.Sequential([
-        base_model,
-        layers.GlobalAveragePooling2D(),
-        layers.Dropout(0.3),
-        layers.Dense(1, activation="sigmoid")
-    ])
-
-    return model
+    metrics=[
+        "accuracy"
+    ]
+)
 
 
-if __name__ == "__main__":
-
-    print("Loading dataset...")
-
-    train_ds = load_dataset(TRAIN_PATH)
-    val_ds = load_dataset(VAL_PATH)
+print("Starting training")
 
 
-    model = build_model()
+model.fit(
 
-    model.compile(
-        optimizer="adam",
-        loss="binary_crossentropy",
-        metrics=["accuracy"]
-    )
+    train_dataset,
 
+    validation_data=val_dataset,
 
-    model.summary()
+    epochs=epochs
 
-
-    print("Starting training...")
-
-    history = model.fit(
-        train_ds,
-        validation_data=val_ds,
-        epochs=EPOCHS
-    )
+)
 
 
-    MODEL_PATH.parent.mkdir(
-        exist_ok=True
-    )
+model.save(model_path)
 
-    model.save(MODEL_PATH)
 
-    print(
-        f"Model saved to {MODEL_PATH}"
-    )
+print(
+    f"Saved model: {model_path}"
+)

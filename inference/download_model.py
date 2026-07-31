@@ -1,53 +1,33 @@
-from pathlib import Path
 import boto3
-from botocore.exceptions import ClientError
+
+from utils.config_loader import load_config
 
 
-BASE_DIR = Path(__file__).resolve().parent.parent
 
-MODEL_PATH = (
-    BASE_DIR
-    / "models"
-    / "pneumonia_model.keras"
+config = load_config()
+
+
+s3 = boto3.client(
+
+    "s3",
+
+    region_name=config["aws"]["region"]
+
 )
 
 
-BUCKET_NAME = "codebymaxx-pneumonia-models"
 
-S3_KEY = (
-    "models/pneumonia_model.keras"
+s3.download_file(
+
+    config["aws"]["bucket"],
+
+    config["aws"]["s3_key"],
+
+    config["model"]["path"]
+
 )
 
 
-def download_model():
-
-    s3 = boto3.client("s3")
-
-    MODEL_PATH.parent.mkdir(
-        exist_ok=True
-    )
-
-    try:
-
-        print("Downloading model from S3...")
-
-        s3.download_file(
-            BUCKET_NAME,
-            S3_KEY,
-            str(MODEL_PATH)
-        )
-
-        print("Download successful!")
-        print(
-            f"Saved to: {MODEL_PATH}"
-        )
-
-
-    except ClientError as e:
-
-        print("Download failed:")
-        print(e)
-
-
-if __name__ == "__main__":
-    download_model()
+print(
+    "Model downloaded"
+)

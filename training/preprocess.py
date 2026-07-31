@@ -1,32 +1,39 @@
-from pathlib import Path
 import tensorflow as tf
 
-
-IMG_SIZE = (224, 224)
-BATCH_SIZE = 32
+from utils.config_loader import load_config
 
 
-BASE_DIR = Path(__file__).resolve().parent.parent
-
-TRAIN_PATH = BASE_DIR / "data" / "raw" / "chest_xray" / "train"
+config = load_config()
 
 
-def load_dataset(path):
-
-    dataset = tf.keras.utils.image_dataset_from_directory(
-        path,
-        image_size=IMG_SIZE,
-        batch_size=BATCH_SIZE,
-        label_mode="binary"
-    )
-
-    return dataset
+dataset_path = config["dataset"]["path"]
 
 
-if __name__ == "__main__":
+image_size = tuple(
+    config["training"]["image_size"]
+)
 
-    print(f"Dataset path: {TRAIN_PATH}")
+batch_size = config["training"]["batch_size"]
 
-    train_ds = load_dataset(TRAIN_PATH)
 
-    print(train_ds)
+train_path = (
+    f"{dataset_path}/"
+    f"{config['dataset']['train']}"
+)
+
+
+train_dataset = tf.keras.utils.image_dataset_from_directory(
+    train_path,
+    image_size=image_size,
+    batch_size=batch_size,
+    label_mode="binary"
+)
+
+
+print(
+    "Dataset loaded:"
+)
+
+print(
+    train_dataset
+)
