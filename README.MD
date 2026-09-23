@@ -1,599 +1,242 @@
-# AWS Pneumonia Detection
+# AWS MNIST Classifier
 
-An end-to-end deep learning application for classifying chest X-ray images as **NORMAL** or **PNEUMONIA**.
+A machine learning project for classifying handwritten digits from the **MNIST dataset** using **PyTorch**.
 
-The project combines **TensorFlow**, **Keras**, **EfficientNetB0**, **FastAPI**, local/GPU training, and **AWS S3** model storage in a configuration-driven machine learning workflow.
+The project demonstrates model training locally or in an AWS environment and includes scripts for preparing the training workflow and storing the resulting model artifact.
 
-> **Note:** This project is intended as a machine-learning engineering demonstration and is **not a medical diagnostic system**.
+## Features
 
-## Overview
-
-The project covers the complete ML workflow:
-
-```text
-Chest X-Ray Dataset
-        │
-        ▼
-Data Preprocessing
-        │
-        ▼
-EfficientNetB0
-Transfer Learning
-        │
-        ▼
-Model Training
-        │
-        ▼
-Model Evaluation
-        │
-        ▼
-pneumonia_model.keras
-        │
-        ├──────────────► Local Inference
-        │
-        ├──────────────► FastAPI
-        │
-        └──────────────► AWS S3
-```
-
-The same codebase can be used for:
-
-* Local development
-* Local GPU training
-* AWS-based training
-* Model inference
-* Browser-based predictions
-* Model evaluation
+* 🧠 MNIST handwritten digit classification
+* 🔥 PyTorch-based convolutional neural network (CNN)
+* 🖥️ CPU and CUDA/GPU support
+* ☁️ AWS/SageMaker-oriented training workflow
+* 💾 PyTorch model export as `model.pth`
+* ⚙️ Configurable number of training epochs in the training entry point
 
 ## Technology Stack
 
-| Area                 | Technology                    |
-| -------------------- | ----------------------------- |
-| Programming Language | Python                        |
-| Deep Learning        | TensorFlow / Keras            |
-| Model                | EfficientNetB0                |
-| Training             | Transfer Learning             |
-| API                  | FastAPI                       |
-| Server               | Uvicorn                       |
-| Cloud Storage        | AWS S3                        |
-| Configuration        | JSON + Environment Variables  |
-| Dataset              | Chest X-Ray Pneumonia Dataset |
+| Technology      | Purpose                                 |
+| --------------- | --------------------------------------- |
+| **Python**      | Application and training logic          |
+| **PyTorch**     | Neural network and model training       |
+| **Torchvision** | MNIST dataset and image transformations |
+| **CUDA**        | Optional GPU acceleration               |
+| **AWS**         | Cloud-based ML environment              |
+| **SageMaker**   | Training environment integration        |
 
 ## Project Structure
 
 ```text
-aws-pneumonia-detection/
-├── config/
-│   ├── config_local.json
-│   ├── config_gpu.json
-│   └── config_aws.json
-├── inference/
-│   └── predict.py
-├── screenshots/
+aws-mnist-classifier/
+│
 ├── training/
-│   ├── start_training.py
-│   ├── evaluate.py
-│   └── upload_model.py
-├── utils/
-│   └── config_loader.py
-├── requirements.txt
-├── gpu_test.py
+│   └── train.py
+│
+├── start_training.py
+├── upload_data.py
 └── README.MD
 ```
 
-The application also contains the FastAPI application and its routes for prediction, training, model management, evaluation, and settings.
+The repository separates the training code from the top-level scripts used to start the training workflow and handle data/model uploads.
 
-## Dataset
+## Model Architecture
 
-The project uses the **Kaggle Chest X-Ray Pneumonia Dataset**.
-
-The expected structure is:
+The classifier uses a convolutional neural network with:
 
 ```text
-data/
-└── raw/
-    └── chest_xray/
-        ├── train/
-        │   ├── NORMAL/
-        │   └── PNEUMONIA/
-        ├── val/
-        │   ├── NORMAL/
-        │   └── PNEUMONIA/
-        └── test/
-            ├── NORMAL/
-            └── PNEUMONIA/
+Input: MNIST image
+        │
+        ▼
+Conv2D (1 → 16)
+        │
+      ReLU
+        │
+   MaxPooling
+        │
+        ▼
+Conv2D (16 → 32)
+        │
+      ReLU
+        │
+   MaxPooling
+        │
+        ▼
+      Flatten
+        │
+        ▼
+   Linear Layer
+     1568 → 128
+        │
+      ReLU
+        │
+        ▼
+   Linear Layer
+     128 → 10
+        │
+        ▼
+   Digit 0–9
 ```
 
-The classification task is binary:
+The final layer contains ten outputs corresponding to the ten MNIST digit classes (`0`–`9`).
 
-```text
-NORMAL
-PNEUMONIA
-```
+## Training
 
-The dataset is used for development and experimentation. It should not be interpreted as sufficient evidence for clinical deployment.
+The training implementation uses:
 
-## Image Preprocessing
+* PyTorch
+* `torchvision.datasets.MNIST`
+* `DataLoader`
+* Adam optimization
+* Cross-entropy loss
+* CUDA when available
 
-The preprocessing pipeline:
+The model is trained for five epochs in the SageMaker-oriented training implementation.
 
-1. Loads X-ray images
-2. Resizes images to `224 × 224`
-3. Normalizes image data
-4. Creates TensorFlow datasets
-5. Feeds the processed images into the training pipeline
+### Training locally
 
-## Model
-
-The project uses **EfficientNetB0** with transfer learning.
-
-### Training configuration
-
-| Parameter         | Value                 |
-| ----------------- | --------------------- |
-| Input size        | `224 × 224`           |
-| Model             | EfficientNetB0        |
-| Task              | Binary classification |
-| Optimizer         | Adam                  |
-| Learning rate     | `0.0001`              |
-| Epochs            | 10                    |
-| Transfer learning | Enabled               |
-
-The trained model is stored as:
-
-```text
-models/
-└── pneumonia_model.keras
-```
-
-The configuration is intentionally kept outside the training code so that different environments can use different settings.
-
-## Configuration-Driven Architecture
-
-Runtime configuration is selected through the `CONFIG_PATH` environment variable.
-
-```text
-CONFIG_PATH
-     │
-     ▼
-config_loader.py
-     │
-     ▼
-config_*.json
-     │
-     ├──────────────► Training
-     ├──────────────► Inference
-     └──────────────► FastAPI
-```
-
-Available configurations:
-
-```text
-config/config_local.json
-config/config_gpu.json
-config/config_aws.json
-```
-
-This makes it possible to use the same application code across different environments.
-
-### Example
+The repository contains a top-level training entry point:
 
 ```bash
-CONFIG_PATH=config/config_local.json \
-python training/start_training.py
+python start_training.py
 ```
 
-For GPU training:
+The training script automatically selects CUDA when an NVIDIA GPU is available and otherwise falls back to the CPU.
+
+You can also configure the number of epochs through the script's command-line argument:
 
 ```bash
-CONFIG_PATH=config/config_gpu.json \
-python training/start_training.py
+python start_training.py --epochs 10
 ```
 
-For AWS:
+## Output Model
 
-```bash
-CONFIG_PATH=config/config_aws.json \
-python training/start_training.py
-```
-
-## Model Evaluation
-
-The project evaluates the classifier using multiple metrics rather than relying only on accuracy.
-
-### Accuracy
-
-Overall percentage of correct predictions.
-
-### Precision
-
-How many samples predicted as pneumonia were actually pneumonia cases.
-
-### Recall
-
-How many pneumonia cases were detected by the model.
-
-Recall is particularly important for this type of classification problem because false negatives can be significant.
-
-### F1 Score
-
-The harmonic mean of precision and recall.
+The training workflow saves the trained PyTorch model as:
 
 ```text
-F1 = 2 × (precision × recall)
-     --------------------------
-       precision + recall
+model.pth
 ```
 
-The FastAPI application exposes an evaluation page where these metrics can be displayed.
-
-## FastAPI Application
-
-The project includes a browser-accessible FastAPI application.
-
-Start the application with:
-
-```bash
-CONFIG_PATH=config/config_local.json \
-uvicorn api.main:app --reload
-```
-
-The application is available at:
+For the SageMaker training workflow, the model is written to:
 
 ```text
-http://127.0.0.1:8000
+/opt/ml/model/model.pth
 ```
 
-## API Features
+This allows the resulting model artifact to be consumed by an AWS-managed training workflow.
 
-### Dashboard
+## Requirements
 
-```text
-/
-```
+The project requires Python and the PyTorch ecosystem.
 
-Provides an overview of the application and environment.
-
-### Prediction
-
-```text
-/predict
-```
-
-Allows an X-ray image to be uploaded for inference.
-
-The prediction workflow is:
-
-```text
-X-Ray Image
-     │
-     ▼
-Preprocessing
-     │
-     ▼
-EfficientNetB0
-     │
-     ▼
-Prediction
-     │
-     ▼
-Confidence Score
-```
-
-The result contains the predicted class and confidence information.
-
-### Training
-
-```text
-/train
-```
-
-Allows training to be started from the web interface.
-
-The application uses FastAPI background tasks for training execution.
-
-### Model Management
-
-```text
-/models
-```
-
-Provides information about the currently available model, including:
-
-* Model path
-* File size
-* Modification time
-* Model availability
-
-### Evaluation
-
-```text
-/evaluation
-```
-
-Displays model evaluation information including:
-
-* Accuracy
-* Precision
-* Recall
-* F1 score
-
-### Settings
-
-```text
-/settings
-```
-
-Displays the currently loaded:
-
-* Environment
-* Configuration
-* Hardware settings
-* AWS settings
-
-## AWS Integration
-
-AWS S3 is used for model storage.
-
-The workflow is:
-
-```text
-Training
-    │
-    ▼
-pneumonia_model.keras
-    │
-    ▼
-AWS S3
-    │
-    ▼
-Model Download
-    │
-    ▼
-Inference
-```
-
-This separates model storage from the application runtime.
-
-The configuration also supports AWS-specific execution through:
-
-```text
-config/config_aws.json
-```
-
-## Security
-
-AWS credentials and secrets should **never** be committed to the repository.
-
-Sensitive configuration should be provided through environment variables, IAM roles, or a dedicated secret-management solution.
-
-For production AWS deployments, suitable approaches include:
-
-* IAM roles
-* EC2 instance profiles
-* AWS Secrets Manager
-* Restricted S3 bucket permissions
-
-Do not place:
-
-```text
-AWS access keys
-AWS secret keys
-.env files
-passwords
-tokens
-```
-
-inside the repository.
-
-## Local Setup
-
-Create a virtual environment:
-
-```bash
-python3 -m venv .venv
-```
-
-Activate it:
-
-```bash
-source .venv/bin/activate
-```
-
-Install the dependencies:
+Install the dependencies according to the project's dependency configuration:
 
 ```bash
 pip install -r requirements.txt
 ```
 
-## Run the API
-
-Start the local FastAPI application:
-
-```bash
-CONFIG_PATH=config/config_local.json \
-uvicorn api.main:app --reload
-```
-
-Then open:
+The training code uses:
 
 ```text
-http://127.0.0.1:8000
+torch
+torchvision
 ```
 
-## Train the Model
+For GPU training, a compatible NVIDIA driver and CUDA-enabled PyTorch installation are required.
 
-### Local
+## AWS / SageMaker
 
-```bash
-CONFIG_PATH=config/config_local.json \
-python training/start_training.py
-```
-
-### Local GPU
-
-```bash
-CONFIG_PATH=config/config_gpu.json \
-python training/start_training.py
-```
-
-### AWS
-
-```bash
-CONFIG_PATH=config/config_aws.json \
-python training/start_training.py
-```
-
-## Run Inference
-
-Inference can be performed through the FastAPI interface or directly through the inference module.
-
-The general workflow is:
+The training code contains paths used by AWS SageMaker training jobs, including:
 
 ```text
-Input Image
-     │
-     ▼
-Image Preprocessing
-     │
-     ▼
-Loaded Keras Model
-     │
-     ▼
-Prediction
-     │
-     ▼
-Class + Confidence
+/opt/ml/input/data/train
+/opt/ml/model
 ```
 
-## Model Lifecycle
+The training script can therefore be used as part of a SageMaker training workflow.
 
-The repository separates the main stages of the model lifecycle:
+A typical workflow is:
 
 ```text
-Dataset
-   │
-   ▼
+MNIST Dataset
+      │
+      ▼
 Training
-   │
-   ▼
-Evaluation
-   │
-   ▼
-Model Artifact
-   │
-   ├──────────────► Local Inference
-   │
-   └──────────────► AWS S3
-                         │
-                         ▼
-                     Deployment
+      │
+      ▼
+PyTorch CNN
+      │
+      ▼
+model.pth
+      │
+      ▼
+AWS / SageMaker
 ```
 
-This structure makes it easier to extend the project with model versioning, automated training, or a model registry.
+## GPU Support
+
+The training code automatically detects whether CUDA is available:
+
+```python
+device = torch.device(
+    "cuda" if torch.cuda.is_available()
+    else "cpu"
+)
+```
+
+This means the same training code can run on a CPU or use an available CUDA-capable GPU.
+
+You can verify GPU availability with:
+
+```bash
+nvidia-smi
+```
 
 ## What This Project Demonstrates
 
-This project combines several areas of software and machine-learning engineering:
+This project provides a compact example of:
 
-### Machine Learning
+* MNIST image classification
+* Convolutional neural networks
+* PyTorch model training
+* GPU acceleration with CUDA
+* Model serialization with PyTorch
+* AWS/SageMaker-oriented ML workflows
+* Separating training logic from the project entry point
 
-* Image classification
-* Transfer learning
-* EfficientNet
-* TensorFlow / Keras
-* Model evaluation
+## Possible Extensions
 
-### Software Engineering
+Possible future improvements include:
 
-* Modular project structure
-* Configuration-driven execution
-* Separation of training and inference
-* REST API
-* Background tasks
+* [ ] Add a dedicated inference script
+* [ ] Add model evaluation on a test dataset
+* [ ] Report accuracy and loss metrics
+* [ ] Add model inference examples
+* [ ] Add automated model upload to S3
+* [ ] Add Docker support
+* [ ] Add AWS SageMaker deployment configuration
+* [ ] Add experiment tracking
+* [ ] Add CI/CD for training and testing
 
-### Cloud Engineering
+## Project Status
 
-* AWS S3
-* Cloud-based model storage
-* Environment-specific configuration
-* Preparation for AWS GPU workloads
+The repository currently focuses on the **MNIST training workflow and model generation**.
 
-### Deployment
-
-* Local execution
-* GPU execution
-* AWS execution
-* Browser-based inference
-
-## Limitations
-
-This repository is a portfolio and engineering project rather than a clinically validated system.
-
-Important limitations include:
-
-* Dataset-specific training
-* Limited training configuration
-* No clinical validation
-* No external clinical test set
-* No production monitoring
-* No model governance
-* No automated model versioning
-* No authentication for the demonstration API
-
-Predictions from the application should therefore **not be used for medical diagnosis or treatment decisions**.
-
-## Future Improvements
-
-Potential extensions include:
-
-* Docker deployment
-* AWS ECS deployment
-* Automated CI/CD
-* Model versioning
-* Model registry
-* Automated retraining
-* AWS CloudWatch monitoring
-* API authentication
-* Prediction logging
-* Dataset versioning
-* Experiment tracking
-* Hyperparameter optimization
-* Model explainability
-* Production-grade model serving
-
-## Project Summary
-
-This project implements an end-to-end deep learning workflow for chest X-ray image classification.
-
-The main components are:
+The core workflow is:
 
 ```text
-TensorFlow / Keras
-        │
-        ▼
-EfficientNetB0
-        │
-        ▼
-Model Evaluation
-        │
-        ▼
-FastAPI
-        │
-        ├──────────► Prediction
-        ├──────────► Training
-        ├──────────► Evaluation
-        └──────────► Model Management
-        │
-        ▼
-AWS S3
+MNIST
+  │
+  ▼
+PyTorch CNN
+  │
+  ▼
+Training
+  │
+  ▼
+model.pth
 ```
 
-The project demonstrates how a trained computer-vision model can be integrated into a configurable Python application and connected to cloud-based model storage.
+## License
 
-## Author
-
-**Markus**
-
-Machine Learning / Cloud Engineering Project
+This project is licensed under the **MIT License**.
 
