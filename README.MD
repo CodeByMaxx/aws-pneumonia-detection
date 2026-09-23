@@ -1,23 +1,44 @@
 # AWS Pneumonia Detection
 
-A deep-learning project for detecting pneumonia from chest X-ray images using **TensorFlow/Keras** and **EfficientNetB0**.
+A deep learning project for detecting pneumonia from chest X-ray images using TensorFlow and Keras.
 
-The project contains the training and inference components, configuration files, utilities, and screenshots documenting the model and application workflow.
+The project demonstrates an image-classification workflow from model training and evaluation to prediction and an AWS-oriented deployment setup.
 
-## ✨ Features
+## Features
 
-* Pneumonia classification from chest X-ray images
-* Transfer learning with **EfficientNetB0**
-* TensorFlow / Keras training pipeline
-* Configurable training settings
-* GPU support when available
-* Separate training and inference components
-* Local and AWS-oriented configuration
-* Model evaluation
-* Saved trained model artifacts
+* Pneumonia detection from chest X-ray images
+* TensorFlow / Keras
+* EfficientNetB0-based image classification
+* Training and evaluation workflow
+* Image prediction
+* GPU support
+* AWS-oriented workflow
+* S3 integration
+* FastAPI-based inference components
 * Visual results and screenshots
 
-## 🛠️ Technology Stack
+## Machine Learning Workflow
+
+```text
+Chest X-ray Images
+        │
+        ▼
+Data Preparation
+        │
+        ▼
+EfficientNetB0
+        │
+        ▼
+Model Training
+        │
+        ▼
+Evaluation
+        │
+        ▼
+Prediction
+```
+
+## Technology Stack
 
 * **Python**
 * **TensorFlow**
@@ -28,34 +49,7 @@ The project contains the training and inference components, configuration files,
 * **FastAPI**
 * **AWS S3**
 
-## 🧠 Machine Learning Workflow
-
-```text
-Chest X-Ray Dataset
-        │
-        ▼
- Data Loading
-        │
-        ▼
- Preprocessing
-        │
-        ▼
- EfficientNetB0
-        │
-        ▼
- Model Training
-        │
-        ▼
- Evaluation
-        │
-        ▼
- Trained Model
-        │
-        ▼
- Inference
-```
-
-## 📂 Project Structure
+## Project Structure
 
 ```text
 aws-pneumonia-detection/
@@ -75,74 +69,81 @@ aws-pneumonia-detection/
 └── README.md
 ```
 
-The repository is organized around configuration, training, inference, and utility code. The `screenshots/` directory contains visual results from the project.
+### `config/`
 
-## ⚙️ Configuration
+Contains configuration used by the project.
 
-Configuration is separated from the training implementation so that the project can be adapted to different environments.
+### `training/`
 
-The configuration supports local development, GPU execution, and AWS-oriented workflows.
+Contains the training-related implementation for the pneumonia detection model.
 
-This keeps environment-specific paths and settings outside the main training logic.
+### `inference/`
 
-## 🏋️ Training
+Contains components used for model inference and prediction.
 
-The training implementation uses **TensorFlow/Keras** and **EfficientNetB0**.
+### `utils/`
 
-The general workflow is:
+Contains supporting utilities used by the project.
+
+### `screenshots/`
+
+Contains visual results from the project, including model information, training, evaluation, dashboard, and prediction output.
+
+## Configuration
+
+Project configuration is kept separately under:
 
 ```text
-1. Load configuration
-2. Load dataset
-3. Prepare training/validation/test data
-4. Preprocess images
-5. Initialize EfficientNetB0
-6. Train the classifier
-7. Evaluate the model
-8. Save the trained model
+config/
 ```
 
-The project can use a GPU when TensorFlow detects a compatible CUDA environment.
+This keeps configuration values separate from the main training and inference implementation.
 
-A GPU test utility is included:
+## Training
+
+Install the Python dependencies:
 
 ```bash
-python gpu_test.py
+pip install -r requirements.txt
 ```
 
-## 🔬 Model
+The training workflow uses TensorFlow / Keras and an EfficientNetB0-based model for image classification.
 
-The classifier uses **EfficientNetB0** as its base architecture.
+Depending on the environment, TensorFlow can use an available GPU for accelerated training.
 
-EfficientNetB0 is used as a transfer-learning model and adapted to the pneumonia classification task.
+## Model
 
-The training pipeline prepares the image data, trains the classifier, evaluates the resulting model, and saves the trained model artifact.
+The classifier is based on **EfficientNetB0**.
 
-## 📊 Evaluation
+The model is used to classify chest X-ray images according to the pneumonia detection task.
 
-The project separates the available data into training, validation, and test workflows.
+The general model workflow is:
 
 ```text
-Training Data
-      │
-      ▼
-Model Training
-      │
-      ▼
-Validation
-      │
-      ▼
-Final Evaluation
-      │
-      ▼
+Input Image
+    │
+    ▼
+Image Preprocessing
+    │
+    ▼
+EfficientNetB0
+    │
+    ▼
+Classification Layer
+    │
+    ▼
 Prediction
 ```
 
-The evaluation results are documented visually in the repository screenshots.
+## Evaluation
 
-## 🖼️ Results & Screenshots
+The project includes an evaluation workflow for measuring the trained model on the available evaluation data.
 
-The repository contains screenshots showing the different stages and results of the project.
+Evaluation results are visualized in the project screenshots.
+
+## Results & Screenshots
+
+The repository contains visual results of the training and inference workflow.
 
 ### Model
 
@@ -164,69 +165,55 @@ The repository contains screenshots showing the different stages and results of 
 
 ![Prediction](screenshots/predict.png)
 
-These screenshots provide a visual overview of the model, training process, dashboard, evaluation, and prediction workflow.
+## Inference
 
-## 🔎 Inference
+The `inference/` directory contains the components used for running predictions with the trained model.
 
-The `inference/` directory contains the inference-related implementation.
-
-The intended workflow is:
+A typical inference workflow is:
 
 ```text
-Input X-Ray
+X-ray Image
     │
     ▼
-Image Preprocessing
+Preprocessing
     │
     ▼
-Trained EfficientNet Model
+Trained Model
     │
     ▼
 Prediction
 ```
 
-The inference workflow is separated from training so that an already trained model can be used without running the complete training process again.
+## AWS Workflow
 
-## ☁️ AWS Workflow
+The project is designed with an AWS-oriented workflow in mind.
 
-The project also contains configuration for AWS-oriented workflows.
+AWS S3 can be used for storing and accessing machine-learning data and model-related artifacts.
 
-AWS S3 can be used for storing datasets and model artifacts when the project is executed in a cloud environment.
-
-A typical workflow is:
+A simplified workflow is:
 
 ```text
+Dataset
+   │
+   ▼
 AWS S3
-  │
-  ▼
-Training Environment
-  │
-  ▼
-TensorFlow / EfficientNetB0
-  │
-  ▼
+   │
+   ▼
+Training
+   │
+   ▼
 Trained Model
-  │
-  ▼
-Model Artifact
-  │
-  ▼
+   │
+   ▼
 Inference
 ```
 
-The project can also be configured for local development and GPU-based training.
+## Local Development
 
-## 💻 Local Development
-
-Create a Python virtual environment:
+Create a Python environment and install the project dependencies:
 
 ```bash
 python -m venv .venv
-```
-
-Activate it on Linux/macOS:
-
-```bash
 source .venv/bin/activate
 ```
 
@@ -236,23 +223,21 @@ On Windows:
 .venv\Scripts\activate
 ```
 
-Install the dependencies:
+Then install the dependencies:
 
 ```bash
 pip install -r requirements.txt
 ```
 
-The exact TensorFlow GPU setup depends on the operating system, GPU, CUDA, and TensorFlow version.
+## GPU Test
 
-## 🧪 GPU Test
-
-The repository contains:
+The repository includes:
 
 ```text
 gpu_test.py
 ```
 
-which can be used to check whether the local TensorFlow environment can access a compatible GPU.
+This can be used to check the available GPU / TensorFlow environment.
 
 Run:
 
@@ -260,67 +245,53 @@ Run:
 python gpu_test.py
 ```
 
-## 🔐 Security & Data Handling
+## Security & Data Handling
 
-Chest X-ray datasets can contain sensitive medical information.
+Chest X-ray data can contain sensitive medical information.
 
-When using real-world medical datasets or cloud storage, appropriate access controls and data-protection measures are required.
+For real-world deployment, datasets and model artifacts should therefore be stored and accessed using appropriate access controls.
 
-For AWS deployments, this includes:
+AWS credentials should not be committed to the repository.
 
-* restricted S3 permissions
-* secure IAM policies
-* private buckets where appropriate
-* avoiding credentials in source code
-* appropriate handling of medical data
+Use environment variables or the AWS credential mechanisms provided by the deployment environment instead.
 
-The project is intended as a technical and portfolio demonstration and should not be interpreted as a clinically validated diagnostic system.
+## Important Limitation
 
-## ⚠️ Important Limitation
+This project is primarily a machine-learning and portfolio project.
 
-This project demonstrates an image-classification workflow using a medical dataset.
+A pneumonia classifier should not be treated as a medical diagnostic system without extensive clinical validation, appropriate datasets, regulatory review, and expert oversight.
 
-A machine-learning model trained for this purpose should **not be treated as a medical diagnosis system** without extensive clinical validation, appropriate datasets, regulatory review, and real-world evaluation.
+## Possible Improvements
 
-## 🔮 Possible Improvements
+Possible future extensions include:
 
-Potential future improvements include:
+* Improved dataset management
+* More extensive model evaluation
+* Additional classification metrics
+* Confusion matrix visualization
+* Model versioning
+* Automated training workflows
+* Improved AWS deployment
+* API documentation
+* Monitoring and logging
+* More comprehensive inference testing
 
-* additional model evaluation metrics
-* confusion matrix visualization
-* ROC/AUC analysis
-* explainability with Grad-CAM
-* improved experiment tracking
-* automated model evaluation
-* containerized inference
-* dedicated API deployment
-* CI/CD for the ML pipeline
-* additional AWS automation
+## Project Purpose
 
-## 🎯 Project Purpose
+The purpose of this project is to demonstrate an end-to-end computer-vision workflow for pneumonia detection, combining deep learning with an AWS-oriented infrastructure.
 
-The project demonstrates an end-to-end computer-vision workflow:
+The project covers:
 
-```text
-Dataset
-   ↓
-Preprocessing
-   ↓
-Transfer Learning
-   ↓
-Training
-   ↓
-Evaluation
-   ↓
-Model Artifact
-   ↓
-Inference
-```
+* Image classification
+* Transfer learning
+* Model training
+* Evaluation
+* Inference
+* GPU acceleration
+* AWS S3 integration
+* Visual presentation of results
 
-It combines **deep learning, computer vision, Python, and AWS-oriented workflows** in a single portfolio project.
+## Author
 
----
-
-**Project:** AWS Pneumonia Detection
-**Author:** Markus
+**Markus**
 
