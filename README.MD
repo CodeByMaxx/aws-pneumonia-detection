@@ -1,41 +1,27 @@
-# AWS Pneumonia Detection System
+# AWS Pneumonia Detection
 
-Deep learning application for detecting pneumonia from chest X-ray images using **TensorFlow, Keras, EfficientNetB0, FastAPI and AWS S3**.
+Deep learning project for binary classification of chest X-ray images using **TensorFlow, Keras and EfficientNetB0**.
 
-The project demonstrates an end-to-end machine learning workflow covering data preparation, transfer learning, model evaluation, local/GPU training, inference and cloud-based model storage.
+The project provides configuration-driven training and command-line inference, with support for local CPU/GPU environments and AWS-oriented configuration.
 
-> **Note:** This project is intended as a machine-learning engineering demonstration and is **not a medical diagnostic system**.
+> **Important:** This project is an educational machine-learning project and is **not a medical diagnostic system**.
 
 ---
 
 ## Overview
 
-The system performs binary image classification of chest X-ray images:
+The model classifies chest X-ray images into two classes:
 
 * `NORMAL`
 * `PNEUMONIA`
 
-The main components are:
-
-* TensorFlow / Keras
-* EfficientNetB0 transfer learning
-* FastAPI
-* Configuration-driven execution
-* Local and GPU training
-* Model evaluation
-* Image inference
-* AWS S3 model storage
-* Optional AWS GPU training
-
----
-
-## Architecture
+The current workflow is:
 
 ```text
 Chest X-Ray Dataset
         │
         ▼
-Data Preprocessing
+Dataset Loader
         │
         ▼
 TensorFlow / Keras
@@ -45,44 +31,34 @@ EfficientNetB0
 Transfer Learning
         │
         ▼
-Model Training
-        │
-        ▼
-Model Evaluation
+Binary Classification
         │
         ▼
 pneumonia_model.keras
         │
-        ├───────────────┐
-        ▼               ▼
-   FastAPI API      AWS S3 Storage
-        │
         ▼
-    Inference
+CLI Inference
 ```
-
-The application is configuration-driven so that the same codebase can be used for local development, GPU training and AWS-based execution.
 
 ---
 
 ## Technology Stack
 
-| Area          | Technology                           |
-| ------------- | ------------------------------------ |
-| Language      | Python                               |
-| Deep Learning | TensorFlow / Keras                   |
-| Model         | EfficientNetB0                       |
-| ML approach   | Transfer Learning                    |
-| API           | FastAPI                              |
-| Server        | Uvicorn                              |
-| Cloud Storage | AWS S3                               |
-| Configuration | JSON + `CONFIG_PATH`                 |
-| Hardware      | CPU / NVIDIA GPU                     |
-| Dataset       | Kaggle Chest X-Ray Pneumonia Dataset |
+| Component      | Technology                         |
+| -------------- | ---------------------------------- |
+| Language       | Python                             |
+| Deep Learning  | TensorFlow / Keras                 |
+| Model          | EfficientNetB0                     |
+| Training       | Transfer Learning                  |
+| Classification | Binary Classification              |
+| Inference      | TensorFlow / Keras                 |
+| Configuration  | JSON + `CONFIG_PATH`               |
+| GPU            | NVIDIA CUDA-compatible environment |
+| Cloud          | AWS-oriented configuration / S3    |
 
 ---
 
-## Project Structure
+## Repository Structure
 
 ```text
 aws-pneumonia-detection/
@@ -103,54 +79,98 @@ aws-pneumonia-detection/
 │   └── upload_model.py
 │
 ├── utils/
-│   └── config_loader.py
+│   ├── config_loader.py
+│   └── dataset_loader.py
 │
 ├── gpu_test.py
 ├── requirements.txt
-└── README.md
+├── requirments.txt
+└── README.MD
 ```
 
-The training and inference workflows use configuration files to define paths, model settings, hardware and AWS behaviour.
+The repository also contains a `touch` file which appears to be an unused repository artifact.
 
 ---
 
 ## Configuration
 
-The application uses the `CONFIG_PATH` environment variable to select the active configuration.
+The project uses the `CONFIG_PATH` environment variable to select the configuration file.
 
 Example:
 
 ```bash
-CONFIG_PATH=config/config_local.json
+export CONFIG_PATH=config/config_local.json
 ```
 
-### Local configuration
+Available configurations are:
 
-```bash
-CONFIG_PATH=config/config_local.json
+```text
+config/config_local.json
+config/config_gpu.json
+config/config_aws.json
 ```
 
-### GPU configuration
+The configuration controls items such as:
 
-```bash
-CONFIG_PATH=config/config_gpu.json
+* dataset paths
+* image size
+* training parameters
+* model path
+* hardware settings
+* AWS settings
+* inference threshold
+
+---
+
+## Example Configuration
+
+The local configuration follows this structure:
+
+```json
+{
+  "environment": "local",
+  "dataset": {
+    "path": "data/raw/chest_xray",
+    "train": "train",
+    "validation": "val",
+    "test": "test"
+  },
+  "model": {
+    "path": "models/pneumonia_model.keras",
+    "image_size": [
+      224,
+      224
+    ]
+  },
+  "training": {
+    "epochs": 10,
+    "batch_size": 2,
+    "learning_rate": 0.0001,
+    "transfer_learning": true
+  },
+  "hardware": {
+    "device": "gpu",
+    "mixed_precision": false
+  },
+  "aws": {
+    "enabled": false,
+    "region": "eu-central-1"
+  },
+  "inference": {
+    "confidence_threshold": 0.5
+  }
+}
 ```
 
-### AWS configuration
-
-```bash
-CONFIG_PATH=config/config_aws.json
-```
-
-This approach avoids hard-coding environment-specific settings into the application code.
+The exact configuration files in the repository should be treated as the source of truth for the active settings.
 
 ---
 
 ## Dataset
 
-The project is designed around the **Kaggle Chest X-Ray Pneumonia Dataset**.
+The project is designed for the **Kaggle Chest X-Ray Pneumonia Dataset**.
 
-The expected dataset structure is:
+The expected dataset layout is:
 
 ```text
 data/
@@ -169,364 +189,55 @@ data/
             └── PNEUMONIA/
 ```
 
-The dataset itself is not included in the repository.
+The dataset is not stored in the Git repository.
 
 ---
 
-## Machine Learning Pipeline
+## Model
 
-### 1. Image preprocessing
+The training script creates an **EfficientNetB0** base model with ImageNet weights:
 
-The preprocessing pipeline prepares the X-ray images for model training by:
-
-* loading the images
-* resizing them
-* normalizing image data
-* creating TensorFlow datasets
-
-### 2. Transfer learning
-
-The model uses **EfficientNetB0** as the foundation for image classification.
-
-Transfer learning allows the project to reuse features learned from a large image dataset and adapt them to the pneumonia classification task.
-
-### 3. Training
-
-The documented default training configuration uses:
-
-```text
-Image size:       224 × 224
-Epochs:           10
-Optimizer:        Adam
-Learning rate:    0.0001
-Transfer learning: enabled
+```python
+tf.keras.applications.EfficientNetB0(
+    include_top=False,
+    weights="imagenet"
+)
 ```
 
-The resulting model is stored as:
+The base model is frozen and extended with:
 
 ```text
-pneumonia_model.keras
-```
-
----
-
-## Model Evaluation
-
-The project considers multiple classification metrics instead of relying only on accuracy.
-
-### Accuracy
-
-Percentage of predictions classified correctly.
-
-### Precision
-
-Measures how many predicted positive cases are actually positive.
-
-### Recall
-
-Measures how many actual pneumonia cases are detected.
-
-For medical classification tasks, recall is particularly important because false negatives can be significant.
-
-### F1 Score
-
-Combines precision and recall into a single metric.
-
-The evaluation workflow is implemented in:
-
-```text
-training/evaluate.py
-```
-
----
-
-## FastAPI Application
-
-The project provides a FastAPI-based web application for interacting with the trained model.
-
-Start the application with:
-
-```bash
-CONFIG_PATH=config/config_local.json \
-uvicorn api.main:app --reload
-```
-
-The application is then available at:
-
-```text
-http://127.0.0.1:8000
-```
-
-### Main application areas
-
-The current project documentation describes the following routes:
-
-| Route         | Purpose                              |
-| ------------- | ------------------------------------ |
-| `/`           | Application dashboard                |
-| `/predict`    | Upload an X-ray and run inference    |
-| `/train`      | Start model training                 |
-| `/models`     | Model information                    |
-| `/evaluation` | Evaluation results                   |
-| `/settings`   | Active configuration and environment |
-
----
-
-## Prediction
-
-The prediction workflow accepts a chest X-ray image and passes it through the trained EfficientNetB0 model.
-
-```text
-X-Ray Image
-     │
-     ▼
-Preprocessing
-     │
-     ▼
 EfficientNetB0
      │
      ▼
-Classification
+GlobalAveragePooling2D
      │
-     ├── NORMAL
-     └── PNEUMONIA
+     ▼
+Dense(1, sigmoid)
 ```
 
-The prediction interface can expose both the predicted class and the model confidence.
+This produces a binary classification model for `NORMAL` and `PNEUMONIA`.
 
 ---
 
-## Training Interface
+## Training
 
-Training can be started through the FastAPI application as documented by the project.
-
-The training workflow supports:
-
-* starting training
-* background execution
-* training status
-* training logs
-
-The underlying training entry point is:
+Training is implemented in:
 
 ```text
 training/start_training.py
 ```
 
----
+The script reads its configuration through `CONFIG_PATH`, loads the datasets, creates the EfficientNetB0 model and saves the resulting Keras model to the configured model path.
 
-## AWS Integration
+### Training parameters
 
-The project supports storing trained models in **Amazon S3**.
-
-The intended workflow is:
+The repository's local configuration documents:
 
 ```text
-Training
-    │
-    ▼
-pneumonia_model.keras
-    │
-    ▼
-Amazon S3
-    │
-    ▼
-Model Download
-    │
-    ▼
-Inference
+Image size:       224 × 224
+Epochs:           10
+Batch size:       2
+Learning ra
 ```
-
-AWS-specific configuration is selected through:
-
-```bash
-CONFIG_PATH=config/config_aws.json
-```
-
-The project is therefore structured so that model training and model storage can be separated from local development.
-
----
-
-## Security
-
-AWS credentials and secrets should **never be committed to the repository**.
-
-Do not store:
-
-```text
-AWS access keys
-AWS secret keys
-.env files
-passwords
-API keys
-other credentials
-```
-
-For production environments, use AWS-native identity and secret-management mechanisms such as:
-
-* IAM roles
-* EC2 instance profiles
-* AWS Secrets Manager
-
----
-
-## Installation
-
-Create a Python virtual environment:
-
-```bash
-python3 -m venv .venv
-```
-
-Activate it on Linux/macOS:
-
-```bash
-source .venv/bin/activate
-```
-
-Install the project dependencies:
-
-```bash
-pip install -r requirements.txt
-```
-
----
-
-## Run the Application
-
-Start the FastAPI application locally:
-
-```bash
-CONFIG_PATH=config/config_local.json \
-uvicorn api.main:app --reload
-```
-
-Then open:
-
-```text
-http://127.0.0.1:8000
-```
-
----
-
-## Run Training
-
-### Local
-
-```bash
-CONFIG_PATH=config/config_local.json \
-python training/start_training.py
-```
-
-### GPU
-
-```bash
-CONFIG_PATH=config/config_gpu.json \
-python training/start_training.py
-```
-
-### AWS
-
-```bash
-CONFIG_PATH=config/config_aws.json \
-python training/start_training.py
-```
-
-The GPU configuration can be used when a compatible NVIDIA CUDA environment is available.
-
----
-
-## GPU Check
-
-The repository also contains:
-
-```text
-gpu_test.py
-```
-
-This can be used to verify the local GPU environment before starting a GPU-based training run.
-
----
-
-## Model Upload
-
-The repository contains a dedicated training utility:
-
-```text
-training/upload_model.py
-```
-
-This is used as part of the AWS model-storage workflow.
-
----
-
-## Screenshots
-
-The repository contains application screenshots under:
-
-```text
-screenshots/
-```
-
-These can be used to document the FastAPI dashboard, prediction interface and other application views.
-
----
-
-## Medical Disclaimer
-
-This project is an educational and engineering demonstration.
-
-It must **not** be used as a substitute for:
-
-* medical diagnosis
-* clinical decision-making
-* professional radiological assessment
-* patient treatment decisions
-
-Model predictions can be incorrect and should not be interpreted as medical advice.
-
----
-
-## Possible Future Improvements
-
-Potential extensions include:
-
-* Docker deployment
-* AWS ECS deployment
-* CI/CD automation
-* model versioning
-* authentication
-* automated retraining
-* AWS CloudWatch monitoring
-* model registry integration
-* improved experiment tracking
-* automated model evaluation
-
----
-
-## Project Goal
-
-The main goal of this project is to demonstrate how a deep-learning image-classification workflow can be combined with a modern Python API and AWS infrastructure.
-
-It brings together:
-
-```text
-Machine Learning
-        +
-Deep Learning
-        +
-Python API
-        +
-GPU Computing
-        +
-AWS Cloud Infrastructure
-```
-
----
-
-## Author
-
-**Markus**
-
-Machine Learning / Cloud Engineering Project
 
