@@ -1,30 +1,30 @@
-# AWS Pneumonia Detection System
+# AWS Pneumonia Detection
 
-Deep learning project for **binary chest X-ray classification** using TensorFlow/Keras and EfficientNetB0.
+Deep learning project for binary chest X-ray classification using **TensorFlow/Keras** and **EfficientNetB0**.
 
-The project currently focuses on:
-
-* Configuration-driven model training
-* EfficientNetB0 transfer learning
-* Local GPU support
-* Command-line inference
-* AWS S3 model upload
-* A structure that can be extended toward cloud-based training and deployment
+The project is designed as a configuration-driven machine learning pipeline with local CPU/GPU training, command-line inference, and optional AWS S3 model storage.
 
 > **Medical disclaimer:** This project is for educational and technical purposes only. It is not a medical device and must not be used for clinical diagnosis or treatment decisions.
 
----
-
 ## Overview
 
-The model classifies chest X-ray images into two categories:
+The model classifies chest X-ray images into two classes:
 
 * `NORMAL`
 * `PNEUMONIA`
 
-The current implementation uses **EfficientNetB0 with ImageNet weights** as the feature extractor and adds a binary classification head.
+The current implementation uses **EfficientNetB0 with ImageNet weights** as a frozen feature extractor and adds a binary classification head.
 
-The training and inference configuration is loaded from JSON files instead of being hardcoded directly into the Python scripts.
+The project currently provides:
+
+* configuration-driven training
+* EfficientNetB0 transfer learning
+* local CPU/GPU support
+* command-line inference
+* AWS S3 model upload
+* a separate evaluation script under development
+
+There is currently **no FastAPI application or web dashboard** in this repository.
 
 ---
 
@@ -37,7 +37,7 @@ The training and inference configuration is loaded from JSON files instead of be
 | Model             | EfficientNetB0                |
 | Learning Approach | Transfer Learning             |
 | Dataset           | Chest X-Ray Pneumonia Dataset |
-| Configuration     | JSON + `CONFIG_PATH`          |
+| Configuration     | JSON                          |
 | Cloud Storage     | AWS S3                        |
 | Inference         | Python CLI                    |
 | Hardware          | CPU / GPU                     |
@@ -68,19 +68,27 @@ aws-pneumonia-detection/
 │
 ├── gpu_test.py
 ├── requirements.txt
-├── README.MD
-│
-├── requirments.txt
-└── touch
+└── README.MD
 ```
 
-`data/` and `models/` are runtime directories and are not part of the current repository tree.
+The dataset and trained model are runtime artifacts and are not included in the repository.
+
+Expected runtime directories:
+
+```text
+data/
+└── raw/
+    └── chest_xray/
+
+models/
+└── pneumonia_model.keras
+```
 
 ---
 
 ## Dataset
 
-The training configuration expects the following directory structure:
+The training pipeline expects a chest X-ray dataset with the following structure:
 
 ```text
 data/
@@ -99,21 +107,30 @@ data/
             └── PNEUMONIA/
 ```
 
-The dataset itself is not included in this repository.
+The dataset itself is **not included** in this repository.
 
 ---
 
 ## Configuration
 
-The active configuration is selected through the `CONFIG_PATH` environment variable.
+The project uses JSON configuration instead of hardcoding training parameters directly into the Python scripts.
 
-Example:
+The local configuration is stored in:
 
-```bash
-export CONFIG_PATH=config/config_local.json
+```text
+config/config_local.json
 ```
 
-The current local configuration contains:
+The configuration contains settings for:
+
+* dataset paths
+* model output path
+* training parameters
+* hardware
+* AWS
+* inference threshold
+
+Example:
 
 ```json
 {
@@ -157,56 +174,17 @@ The current local configuration contains:
 }
 ```
 
-The important training parameters are currently:
+### Current training configuration
 
-* Image size: `160 × 160`
-* Epochs: `10`
-* Batch size: `2`
-* Learning rate: `0.0001`
-* Transfer learning: enabled
-* Fine-tuning: disabled
-* Inference threshold: `0.5`
-
----
-
-## Model Architecture
-
-The training script uses EfficientNetB0 with ImageNet weights.
-
-The base model is frozen during the current training configuration.
-
-The classification pipeline is approximately:
-
-```text
-Chest X-Ray
-     │
-     ▼
-Image Preprocessing
-     │
-     ▼
-EfficientNetB0
-     │
-     ▼
-GlobalAveragePooling2D
-     │
-     ▼
-Dense(1, sigmoid)
-     │
-     ▼
-NORMAL / PNEUMONIA
-```
-
-The model is trained using:
-
-* Adam optimizer
-* Binary cross-entropy loss
-* Accuracy metric
-
-The resulting model is saved as:
-
-```text
-models/pneumonia_model.keras
-```
+| Parameter            |       Value |
+| -------------------- | ----------: |
+| Image size           | `160 × 160` |
+| Epochs               |        `10` |
+| Batch size           |         `2` |
+| Learning rate        |    `0.0001` |
+| Transfer learning    |     Enabled |
+| Fine-tuning          |    Disabled |
+| Confidence threshold |       `0.5` |
 
 ---
 
@@ -234,29 +212,70 @@ pip install -r requirements.txt
 
 ## Training
 
-With the local configuration:
+Start training with the local configuration:
 
 ```bash
 CONFIG_PATH=config/config_local.json \
 python training/start_training.py
 ```
 
-The training script:
+The training pipeline:
 
-1. Loads the configuration
-2. Loads the train/validation/test dataset configuration
-3. Creates an EfficientNetB0-based model
-4. Freezes the pretrained base model
-5. Trains the classification head
-6. Saves the trained model to the configured model path
+1. loads the configuration
+2. loads the configured dataset
+3. creates an EfficientNetB0-based model
+4. uses ImageNet pretrained weights
+5. freezes the pretrained base model
+6. trains the classification head
+7. saves the resulting model
 
-The current training script uses the training and validation datasets during `fit()`.
+The configured output path is:
+
+```text
+models/pneumonia_model.keras
+```
+
+---
+
+## Model Architecture
+
+The current model consists of an EfficientNetB0 backbone followed by a binary classification head:
+
+```text
+Chest X-Ray
+     │
+     ▼
+Image Preprocessing
+     │
+     ▼
+EfficientNetB0
+     │
+     ▼
+GlobalAveragePooling2D
+     │
+     ▼
+Dense(1, sigmoid)
+     │
+     ▼
+NORMAL / PNEUMONIA
+```
+
+The current training configuration uses:
+
+* EfficientNetB0
+* ImageNet pretrained weights
+* frozen base model
+* GlobalAveragePooling2D
+* one sigmoid output neuron
+* Adam optimizer
+* binary cross-entropy loss
+* accuracy metric
 
 ---
 
 ## Inference
 
-Inference is performed through the command line.
+Inference is available through the command line.
 
 Example:
 
@@ -265,14 +284,14 @@ CONFIG_PATH=config/config_local.json \
 python inference/predict.py path/to/xray.jpg
 ```
 
-The script:
+The inference script:
 
-1. Loads the configured model
-2. Loads the supplied image
-3. Resizes it according to the configuration
-4. Runs model inference
-5. Applies the configured confidence threshold
-6. Prints the predicted class and confidence
+1. loads the configured model
+2. loads the supplied image
+3. resizes the image
+4. runs the model
+5. applies the configured confidence threshold
+6. prints the predicted class and confidence
 
 Example output:
 
@@ -281,7 +300,7 @@ Prediction: PNEUMONIA
 Confidence: 95.4%
 ```
 
-The threshold is currently configured as:
+The current threshold is:
 
 ```text
 0.5
@@ -289,17 +308,17 @@ The threshold is currently configured as:
 
 ---
 
-## AWS S3 Integration
+## AWS S3
 
-The repository includes a dedicated S3 upload script:
+The repository contains an S3 upload script:
 
 ```text
 training/upload_model.py
 ```
 
-It uses `boto3` to upload the configured model file to an S3 bucket.
+The script uses `boto3` to upload the configured model to an S3 bucket.
 
-The relevant configuration is:
+Configure the AWS section in `config/config_local.json`:
 
 ```json
 "aws": {
@@ -310,38 +329,53 @@ The relevant configuration is:
 }
 ```
 
-After configuring the bucket and S3 object key, the upload can be executed with:
+Then run:
 
 ```bash
 CONFIG_PATH=config/config_local.json \
 python training/upload_model.py
 ```
 
-The script uploads:
+The configured model:
 
 ```text
 models/pneumonia_model.keras
 ```
 
-to:
+is uploaded to:
 
 ```text
 s3://<bucket>/<s3_key>
 ```
 
-AWS credentials should be provided through the normal AWS credential mechanisms or an IAM role rather than committed to the repository.
+AWS credentials should **never** be committed to the repository.
+
+Use standard AWS credential mechanisms such as:
+
+* AWS CLI credentials
+* environment variables
+* IAM roles
+* EC2 instance profiles
 
 ---
 
 ## GPU Support
 
-The project contains:
+The repository includes:
 
 ```text
 gpu_test.py
 ```
 
-for checking the available TensorFlow GPU environment.
+which can be used to check the TensorFlow GPU environment.
+
+Run:
+
+```bash
+python gpu_test.py
+```
+
+GPU availability depends on the installed TensorFlow version and the local CUDA/GPU environment.
 
 The configuration also contains:
 
@@ -352,43 +386,55 @@ The configuration also contains:
 }
 ```
 
-GPU availability depends on the local TensorFlow/CUDA environment.
-
 ---
 
 ## Evaluation
 
-An evaluation script is present:
+An evaluation script is available at:
 
 ```text
 training/evaluate.py
 ```
 
-It is intended to calculate classification metrics such as:
+The intended purpose is to evaluate the trained model against the test dataset and provide classification metrics.
 
-* Precision
-* Recall
+The evaluation pipeline is currently **work in progress** and should not be considered a completed benchmark.
+
+Planned metrics include:
+
+* accuracy
+* precision
+* recall
 * F1 score
-* Confusion matrix
+* confusion matrix
 
-However, the current implementation is **not complete**. It references `test_dataset` and `test_labels` without defining/loading them first.
+No production performance claims are made by this repository.
 
-Therefore, evaluation should currently be considered **work in progress** rather than a completed pipeline.
+---
+
+## Screenshots
+
+Example project screenshots are available in:
+
+```text
+screenshots/
+```
 
 ---
 
 ## Security
 
-No AWS credentials, access keys or other secrets should be committed to the repository.
+Do not commit:
 
-For AWS deployments, prefer:
+* AWS access keys
+* AWS secret keys
+* passwords
+* tokens
+* private credentials
+* locally generated datasets
+* trained model artifacts unless intentionally versioned
 
-* IAM roles
-* EC2 instance profiles
-* Environment-based credentials
-* AWS Secrets Manager where appropriate
-
-Never hardcode AWS access keys into configuration files or Python source code.
+For AWS workloads, prefer IAM roles and other standard AWS credential mechanisms.
 
 ---
 
@@ -398,52 +444,44 @@ Never hardcode AWS access keys into configuration files or Python source code.
 
 * TensorFlow/Keras training
 * EfficientNetB0 transfer learning
-* Configuration-based training
-* Local GPU configuration
-* CLI inference
+* JSON-based configuration
+* local CPU/GPU workflow
+* command-line inference
 * `.keras` model output
 * AWS S3 model upload
-* GPU test utility
+* GPU environment test
 
 ### Work in Progress
 
-* Automated model evaluation
-* Fine-tuning
-* More extensive metrics
-* Cloud training workflow
-* Production deployment
+* complete automated evaluation
+* additional model metrics
+* fine-tuning
+* dataset validation
+* experiment tracking
+* model versioning
+* automated testing
+* cloud training infrastructure
+* production deployment
 
-The repository currently does **not** contain the FastAPI application described by the older README, so the documentation intentionally does not claim a web API or browser-based dashboard.
-
----
-
-## Repository Cleanup
-
-A few files in the current repository could be cleaned up:
-
-* `requirments.txt` — duplicate/misspelled dependency file
-* `touch` — appears to be an unused artifact
-* `README.MD` — could optionally be renamed to the conventional `README.md`
-
-These do not affect the core training/inference workflow.
+The repository intentionally documents only functionality that is currently present in the codebase.
 
 ---
 
 ## Future Improvements
 
-Possible next steps:
+Potential extensions include:
 
-* Complete the evaluation pipeline
-* Add precision/recall/F1 reporting
-* Add confusion-matrix visualization
-* Implement fine-tuning of EfficientNetB0
-* Add automated dataset validation
-* Add experiment tracking
-* Add model versioning
-* Add Docker support
-* Add AWS training/deployment infrastructure
-* Add CI/CD
-* Add automated testing
+* complete the evaluation pipeline
+* add confusion-matrix visualization
+* add precision/recall/F1 reporting
+* implement EfficientNet fine-tuning
+* add automated dataset validation
+* add experiment tracking
+* add model versioning
+* add Docker support
+* add AWS training infrastructure
+* add CI/CD
+* add automated tests
 
 ---
 
@@ -452,4 +490,8 @@ Possible next steps:
 **Markus**
 
 Machine Learning / Cloud Engineering Project
+
+## Disclaimer
+
+This project is intended for educational and engineering purposes. Chest X-ray classification results produced by this software must not be interpreted as medical diagnosis or used as a substitute for professional medical evaluation.
 
