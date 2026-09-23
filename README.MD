@@ -2,7 +2,7 @@
 
 A deep-learning project for detecting pneumonia from chest X-ray images using **TensorFlow/Keras** and **EfficientNetB0**.
 
-The project contains the training and inference components, configuration files, utilities, and screenshots of the resulting application/model workflow.
+The project contains the training and inference components, configuration files, utilities, and screenshots documenting the model and application workflow.
 
 ## ✨ Features
 
@@ -15,7 +15,7 @@ The project contains the training and inference components, configuration files,
 * Local and AWS-oriented configuration
 * Model evaluation
 * Saved trained model artifacts
-* Example results and screenshots
+* Visual results and screenshots
 
 ## 🛠️ Technology Stack
 
@@ -25,8 +25,8 @@ The project contains the training and inference components, configuration files,
 * **EfficientNetB0**
 * **NumPy**
 * **Pillow**
-* **FastAPI-oriented inference components**
-* **AWS S3** for cloud-oriented data/model workflows
+* **FastAPI**
+* **AWS S3**
 
 ## 🧠 Machine Learning Workflow
 
@@ -62,13 +62,17 @@ aws-pneumonia-detection/
 ├── config/
 ├── inference/
 ├── screenshots/
+│   ├── models.png
+│   ├── training.png
+│   ├── dashboard.png
+│   ├── evaluation.png
+│   └── predict.png
 ├── training/
 ├── utils/
 ├── .gitignore
 ├── gpu_test.py
 ├── requirements.txt
-├── README.md
-└── ...
+└── README.md
 ```
 
 The repository is organized around configuration, training, inference, and utility code. The `screenshots/` directory contains visual results from the project.
@@ -77,15 +81,15 @@ The repository is organized around configuration, training, inference, and utili
 
 Configuration is separated from the training implementation so that the project can be adapted to different environments.
 
-The configuration can be used for local development, GPU execution, and AWS-oriented workflows.
+The configuration supports local development, GPU execution, and AWS-oriented workflows.
 
-This keeps paths and environment-specific settings outside the core training logic.
+This keeps environment-specific paths and settings outside the main training logic.
 
 ## 🏋️ Training
 
-The training implementation uses TensorFlow/Keras and EfficientNetB0.
+The training implementation uses **TensorFlow/Keras** and **EfficientNetB0**.
 
-A typical workflow is:
+The general workflow is:
 
 ```text
 1. Load configuration
@@ -100,7 +104,7 @@ A typical workflow is:
 
 The project can use a GPU when TensorFlow detects a compatible CUDA environment.
 
-A small GPU test utility is also included:
+A GPU test utility is included:
 
 ```bash
 python gpu_test.py
@@ -108,47 +112,59 @@ python gpu_test.py
 
 ## 🔬 Model
 
-The classifier uses **EfficientNetB0** as the base architecture.
+The classifier uses **EfficientNetB0** as its base architecture.
 
-EfficientNet provides a pretrained convolutional neural-network architecture that can be adapted to the pneumonia classification task through transfer learning.
+EfficientNetB0 is used as a transfer-learning model and adapted to the pneumonia classification task.
 
-The training pipeline is responsible for preparing the model and training it on the chest X-ray dataset.
+The training pipeline prepares the image data, trains the classifier, evaluates the resulting model, and saves the trained model artifact.
 
 ## 📊 Evaluation
 
-Evaluation is an important part of the workflow because training accuracy alone does not describe how well the model performs on unseen X-ray images.
-
-The project therefore separates:
+The project separates the available data into training, validation, and test workflows.
 
 ```text
 Training Data
-Validation Data
-Test Data
+      │
+      ▼
+Model Training
+      │
+      ▼
+Validation
+      │
+      ▼
+Final Evaluation
+      │
+      ▼
+Prediction
 ```
 
-so that the trained model can be evaluated on data that was not used directly for parameter optimization.
+The evaluation results are documented visually in the repository screenshots.
 
 ## 🖼️ Results & Screenshots
 
-The repository contains screenshots documenting the results and visual output of the project.
+The repository contains screenshots showing the different stages and results of the project.
 
-### Result 1
+### Model
 
-![Pneumonia Detection Result](screenshots/1.png)
+![Model](screenshots/models.png)
 
-### Result 2
+### Training
 
-![Pneumonia Detection Result](screenshots/2.png)
+![Training](screenshots/training.png)
 
-### Result 3
+### Dashboard
 
-![Pneumonia Detection Result](screenshots/3.png)
+![Dashboard](screenshots/dashboard.png)
 
-### Result 4
+### Evaluation
 
-![Pneumonia Detection Result](screenshots/4.png)
+![Evaluation](screenshots/evaluation.png)
 
-> The screenshots are included as visual project results. They provide a quick way to inspect the application/model workflow without having to run the complete training pipeline.
+### Prediction
+
+![Prediction](screenshots/predict.png)
+
+These screenshots provide a visual overview of the model, training process, dashboard, evaluation, and prediction workflow.
 
 ## 🔎 Inference
 
@@ -169,7 +185,7 @@ Trained EfficientNet Model
 Prediction
 ```
 
-Inference is separated from the training code so that an already trained model can be used without running the complete training pipeline again.
+The inference workflow is separated from training so that an already trained model can be used without running the complete training process again.
 
 ## ☁️ AWS Workflow
 
@@ -177,7 +193,7 @@ The project also contains configuration for AWS-oriented workflows.
 
 AWS S3 can be used for storing datasets and model artifacts when the project is executed in a cloud environment.
 
-A typical cloud workflow can be represented as:
+A typical workflow is:
 
 ```text
 AWS S3
@@ -193,25 +209,36 @@ Trained Model
   │
   ▼
 Model Artifact
+  │
+  ▼
+Inference
 ```
 
-The repository also keeps local configuration possible, which makes development and experimentation easier before moving workloads to AWS.
+The project can also be configured for local development and GPU-based training.
 
 ## 💻 Local Development
 
-Create a Python environment and install the dependencies:
+Create a Python virtual environment:
 
 ```bash
 python -m venv .venv
+```
+
+Activate it on Linux/macOS:
+
+```bash
 source .venv/bin/activate
-pip install -r requirements.txt
 ```
 
 On Windows:
 
 ```powershell
-python -m venv .venv
 .venv\Scripts\activate
+```
+
+Install the dependencies:
+
+```bash
 pip install -r requirements.txt
 ```
 
@@ -225,7 +252,9 @@ The repository contains:
 gpu_test.py
 ```
 
-which can be used to verify whether the local TensorFlow environment can access a compatible GPU.
+which can be used to check whether the local TensorFlow environment can access a compatible GPU.
+
+Run:
 
 ```bash
 python gpu_test.py
@@ -245,7 +274,7 @@ For AWS deployments, this includes:
 * avoiding credentials in source code
 * appropriate handling of medical data
 
-The project itself is intended as a technical/portfolio demonstration and should not be interpreted as a clinically validated diagnostic system.
+The project is intended as a technical and portfolio demonstration and should not be interpreted as a clinically validated diagnostic system.
 
 ## ⚠️ Important Limitation
 
